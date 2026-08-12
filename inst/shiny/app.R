@@ -832,28 +832,46 @@ server <- function(input, output, session) {
       click <- event_data("plotly_click", source = "plot")
       if (!is.null(click) && !is.null(values$xtab)) {
         x <- click$x
-        if (x > min(values$xtab) && x < max(values$xtab)) {
-          if (!any(abs(values$knot - x) < 1e-6)) {
+        if (!any(abs(values$knot - x) < 1e-6)) {
             #old values
             tn<-values$knot
             ln=length(values$knot)
 
             idx=length(tn[tn<x])+1 #id the added knot
-            log_console(print(x))
-            log_console(print(tn))
-            log_console(print(idx))
             #update multiplicity: add a new one
+
+            if (idx==1) {# special case adding new ends
+              if (!is.null(values$knot_multiplicity))
+                  {values$knot_multiplicity[1]<-1}  # shift first multiplicity to 1
+              values$knot_multiplicity<-c(input$degree+1,values$knot_multiplicity)
+              values$knot <- sort(c(tn, x))
+
+            }
+            else if (idx==ln+1){
+              if (!is.null(values$knot_multiplicity))
+                  {values$knot_multiplicity[ln]<-1} # shift last multiplicity to 1
+                  values$knot_multiplicity<-c(values$knot_multiplicity,input$degree+1)
+
+                  values$knot <- sort(c(tn, x))
+            }else
+            {
+
+
+            values$manual_knot <- sort(c(values$manual_knot, x))
             values$knot_multiplicity<-c(values$knot_multiplicity[1:(idx-1)],1,values$knot_multiplicity[idx:ln])
             # update knot lists
             values$manual_knot <- sort(c(values$manual_knot, x))
             values$knot <- sort(c(tn, x))
             showNotification(paste("Knot added at x =", round(x, 3)), type = "message")
+            #update multiplicities at end if necessary
+            }
+            values$knot_multiplicity[1]<-input$degree+1 #in case only 1 knot
+            values$knot_multiplicity[ln+1]<-input$degree+1 #in case only 1 knot
+
           } else {
             showNotification("This knot already exists", type = "warning")
           }
-        } else {
-          showNotification("Knot must be inside the interval", type = "warning")
-        }
+
       }
     }
   })
@@ -865,10 +883,16 @@ server <- function(input, output, session) {
                  return()}
 
                  if (idx==1 || idx==length(values$knot))
-                 {showNotification("Cannot remove ends knots", type="warning")}
-                 else {values$knot<-values$knot[-idx]
+                 {showNotification("You removed one end knot", type="warning")
+                  }
+                 values$knot<-values$knot[-idx]
                values$knot_multiplicity<-values$knot_multiplicity[-idx]
-               }
+               #update ends multiplicities
+              if (!is.null(values$knot)){
+               values$knot_multiplicity[1]<-input$degree+1
+               values$knot_multiplicity[length(values$knot) ] <-input$degree+1
+              }
+
                })
 
   observeEvent(input$clear_manual_knots, {
@@ -1971,35 +1995,35 @@ server <- function(input, output, session) {
 
   #version2
   observeEvent(input$basis_update, {
-    withProgress(message = "Generating basis...", {
+    if (is.null(values$knot)){showNotification("No knot available",type="warning")
+      return()}
+    else{
+      if (length(values$knot)<2) {
+        showNotification("Need at least 2 knots",type="warning")
+        return()}
+      else{
 
+      withProgress(message = "Generating basis...", {
       degree <- input$degree
 
-      # Utiliser la séquence étendue avec multiplicités
-      if (!is.null(values$knot)) {
-        # Fallback: construire manuellement
         knot <- values$knot
         if (input$consider_multiplicity){
           mult<-values$knot_multiplicity
           }
         else {
-          mult<-c(input$degree+1,rep(1,(length(values$knot)-2)),input$degree+1) }
-          sn <- build_knot_sequence(values$knot,mult)
+          mult<-c(input$degree+1,rep(1,(length(values$knot)-2)),input$degree+1)
           }
-          else {
-        showNotification("No knots available", type = "warning")
-        return()
-      }
 
+
+      sn <- build_knot_sequence(values$knot,mult)
       # Construire la base
       basis_obj <- Bspline_base(sn, degree = degree, verbose = FALSE)
 
       knot <- values$knot
+
+      if (input$verbose){
       log_console(paste("Basis knots:", paste(round(knot, 4), collapse = ", ")))
-
-
-
-
+      }
       # Dériver si nécessaire
       der <- input$basis_derivative
       if (der > 0) {
@@ -2027,8 +2051,13 @@ server <- function(input, output, session) {
 
       showNotification(paste("Basis generated (degree", degree, ",", length(knot), "knots)"),
                        type = "message")
-    })
-  })
+
+    }) # end "with progrees"
+
+  }# end else
+    } # end else
+  } #end action
+    )
 
 
    output$basis_info <- renderPrint({
