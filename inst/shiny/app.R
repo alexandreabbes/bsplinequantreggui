@@ -228,8 +228,8 @@ ui <- fluidPage(
         tabPanel(
           "Visualization",
           br(),
-          column(
-            6,
+          fluidRow(
+
             actionButton("add_knot_mode","Add knot",class = "btn-sm btn-primary",
               style = "background-color:#FFDD00; color:#000000"),
             actionButton("clear_manual_knots", "Clear \n manual knots", class = "btn-sm btn-danger"),
@@ -814,53 +814,7 @@ server <- function(input, output, session) {
 
     # ============ KNOTS ============
 
-  observeEvent(c(input$auto_knot_count, input$generate_custom), {
-    req(values$xtab)
-    req(input$auto_knot_count >= 2)
 
-    # Ne pas écraser les nœuds manuels
-    #if (length(values$manual_knot) > 0) return()
-
-    kn <- max(input$auto_knot_count, 2) - 1
-    auto_knot<-quantile(values$xtab, probs = seq(0, 1, length.out = kn + 1))
-    #build knot if null
-    if (is.null(values$knot)){
-    values$knot <- auto_knot
-    }
-    else {# regenerate list
-      for (k in values$manual$knot)
-      {if (any(auto_knot==k) ){ #if confusion between auto and manual knot
-        auto_knot<-auto_knot[auto_knot!=k]}
-        }
-      values$knot<-sort(c(auto_knot,values$manual_knot))
-    }
-    degree <- input$degree
-    manual<-values$manual_knot
-
-    mult <- rep(1, length(values$knot))
-    mult[1] <- degree + 1
-    mult[length(mult)] <- degree + 1
-
-    values$knot_multiplicity<-mult
-    values$knot_extended <- build_knot_sequence(values$knot, mult)
-  },
-    ignoreNULL = TRUE, ignoreInit = FALSE)
-
-
-
-  #### Affiche des noeuds
-    output$knots_compact <- renderPrint({
-    if (!is.null(values$knot) && length(values$knot) > 0) {
-      k <- round(values$knot, 3)
-      if (length(k) <= 15) {
-        cat(paste(k, collapse = ", "))
-      } else {
-        cat(paste(c(head(k, 4), "...", tail(k, 4)), collapse = ", "))
-      }
-    } else {
-      cat("(none)")
-    }
-  })
 
   observeEvent(input$add_knot_mode, {
     values$adding_knot <- !values$adding_knot
@@ -872,7 +826,7 @@ server <- function(input, output, session) {
     }
   })
 
-
+# manage adding knots
   observeEvent(event_data("plotly_click", source = "plot"), {
     if (values$adding_knot) {
       click <- event_data("plotly_click", source = "plot")
@@ -880,10 +834,19 @@ server <- function(input, output, session) {
         x <- click$x
         if (x > min(values$xtab) && x < max(values$xtab)) {
           if (!any(abs(values$knot - x) < 1e-6)) {
-            values$manual_knot <- sort(c(values$manual_knot, x))
-            values$knot <- sort(c(values$knot, values$manual_knot))
+            #old values
             tn<-values$knot
-            values$multiplicity<-c(values$multiplicity[tn<x],1,values$multiplicity[tn>x])
+            ln=length(values$knot)
+
+            idx=length(tn[tn<x])+1 #id the added knot
+            log_console(print(x))
+            log_console(print(tn))
+            log_console(print(idx))
+            #update multiplicity: add a new one
+            values$knot_multiplicity<-c(values$knot_multiplicity[1:(idx-1)],1,values$knot_multiplicity[idx:ln])
+            # update knot lists
+            values$manual_knot <- sort(c(values$manual_knot, x))
+            values$knot <- sort(c(tn, x))
             showNotification(paste("Knot added at x =", round(x, 3)), type = "message")
           } else {
             showNotification("This knot already exists", type = "warning")
@@ -894,10 +857,18 @@ server <- function(input, output, session) {
       }
     }
   })
+
   observeEvent(input$remove_knot,
-               {idx <- selected_knot()
-               if (!is.na(idx)){ values$knot<-values$knot[-idx]
-               values$knot_multiplicity<-values$knot_multiplicity[-idx]}
+               {
+               idx <- selected_knot()
+               if (is.null(idx) || is.na(idx) ) {showNotification("Select a knot first", type="warning")
+                 return()}
+
+                 if (idx==1 || idx==length(values$knot))
+                 {showNotification("Cannot remove ends knots", type="warning")}
+                 else {values$knot<-values$knot[-idx]
+               values$knot_multiplicity<-values$knot_multiplicity[-idx]
+               }
                })
 
   observeEvent(input$clear_manual_knots, {
@@ -920,6 +891,54 @@ server <- function(input, output, session) {
   }}
   )
 
+  # update the knot list on particular events
+  observeEvent(c(input$auto_knot_count, input$generate_custom), {
+    req(values$xtab)
+    req(input$auto_knot_count >= 2)
+
+    # Ne pas écraser les nœuds manuels
+    #if (length(values$manual_knot) > 0) return()
+
+    kn <- max(input$auto_knot_count, 2) - 1
+    auto_knot<-as.numeric(quantile(values$xtab, probs = seq(0, 1, length.out = kn + 1)))
+    #build knot if null
+    if (is.null(values$knot)){
+      values$knot <- auto_knot
+    }
+    else {# regenerate list
+      for (k in values$manual$knot)
+      {if (any(auto_knot==k) ){ #if confusion between auto and manual knot
+        auto_knot<-auto_knot[auto_knot!=k]}
+      }
+      values$knot<-sort(c(auto_knot,values$manual_knot))
+    }
+    degree <- input$degree
+    manual<-values$manual_knot
+
+    mult <- rep(1, length(values$knot))
+    mult[1] <- degree + 1
+    mult[length(mult)] <- degree + 1
+
+    values$knot_multiplicity<-mult
+    values$knot_extended <- build_knot_sequence(values$knot, mult)
+  },
+  ignoreNULL = TRUE, ignoreInit = FALSE)
+
+
+
+  #### Affiche des noeuds
+  output$knots_compact <- renderPrint({
+    if (!is.null(values$knot) && length(values$knot) > 0) {
+      k <- round(values$knot, 3)
+      if (length(k) <= 15) {
+        cat(paste(k, collapse = ", "))
+      } else {
+        cat(paste(c(head(k, 4), "...", tail(k, 4)), collapse = ", "))
+      }
+    } else {
+      cat("(none)")
+    }
+  })
   # ============ SELECTION MANAGEMENT ============
 
   observeEvent(input$start_selection, {
@@ -1135,7 +1154,7 @@ server <- function(input, output, session) {
 
       values$manual_knot <- vector()
       kn <- max(input$auto_knot_count, 2) - 1
-      values$auto_knot_list <- quantile(values$xtab, probs = (0:(kn)) / (kn))
+      values$auto_knot_list <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
 
       showNotification(paste(
         "File loaded:",
@@ -1199,7 +1218,7 @@ server <- function(input, output, session) {
 
       values$manual_knot <- vector()
       kn <- max(input$auto_knot_count, 2) - 1
-      values$knot <- quantile(values$xtab, probs = (0:(kn)) / (kn))
+      values$knot <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
 
       showNotification(paste(
         "File loaded:",
@@ -1243,7 +1262,8 @@ server <- function(input, output, session) {
       version <- packageVersion("BsplineQuantReg")
       #Extended knot sequence with interior multiplicities (regularity control)
       if (input$consider_multiplicity)
-        {mult_knot<-build_knot_sequence(
+        {
+        mult_knot<-build_knot_sequence(
         values$knot,
         values$knot_multiplicity)
         lm<-length(mult_knot)
@@ -1505,158 +1525,6 @@ server <- function(input, output, session) {
 
     #p
   })
-
-  # output$spline_plot <- renderPlotly({
-  #   req(values$xtab)
-  #
-  #   p <- plot_ly(source = "plot")
-  #
-  #   # Data
-  #   p <- p %>% add_trace(
-  #     x = values$xtab,
-  #     y = values$ytab,
-  #     type = "scatter",
-  #     mode = "markers",
-  #     marker = list(
-  #       color = "gray",
-  #       size = 6,
-  #       opacity = 0.5
-  #     ),
-  #     name = "Data"
-  #   )
-  #
-  #   # Knots
-  #   if (!is.null(values$knot)) {
-  #     y_range <- range(values$ytab)
-  #     y_pos <- y_range[2] - 0.1 * diff(y_range)
-  #     p <- p %>% add_trace(
-  #       x = values$knot,
-  #       y = rep(y_pos, length(values$knot)),
-  #       type = "scatter",
-  #       mode = "markers",
-  #       marker = list(
-  #         color = "red",
-  #         symbol = "triangle-down",
-  #         size = 10
-  #       ),
-  #       name = "Knots"
-  #     )
-  #   }
-  #
-  #   # Regions
-  #   if (input$constraint_mode == "region" &&
-  #       length(values$regions) > 0) {
-  #     y_range <- range(values$ytab)
-  #     for (region in values$regions) {
-  #       is_selected <- !is.null(values$selected_region_id) &&
-  #         values$selected_region_id == region$id
-  #       border_color <- if (is_selected)
-  #         "#ff0000"
-  #       else
-  #         "rgba(255, 152, 0, 0.8)"
-  #       fill_color <- if (is_selected)
-  #         "rgba(255, 0, 0, 0.15)"
-  #       else
-  #         "rgba(255, 152, 0, 0.15)"
-  #       p <- p %>% add_trace(
-  #         x = c(
-  #           region$xmin,
-  #           region$xmax,
-  #           region$xmax,
-  #           region$xmin,
-  #           region$xmin
-  #         ),
-  #         y = c(y_range[1], y_range[1], y_range[2], y_range[2], y_range[1]),
-  #         type = "scatter",
-  #         mode = "lines",
-  #         fill = "toself",
-  #         fillcolor = fill_color,
-  #         line = list(color = border_color, width = ifelse(is_selected, 3, 1)),
-  #         name = paste0("Region ", region$id),
-  #         hoverinfo = "text",
-  #         text = paste0(
-  #           "Region ",
-  #           region$id,
-  #           "\n",
-  #           "[",
-  #           round(region$xmin, 3),
-  #           ", ",
-  #           round(region$xmax, 3),
-  #           "]\n",
-  #           "M: ",
-  #           get_sym(region$monot, c("down", "x", "up")),
-  #           "\n",
-  #           "C: ",
-  #           get_sym(region$conv, c("n", "x", "U")),
-  #           "\n",
-  #           "D3: ",
-  #           get_sym(region$der3, c("-", "x", "+"))
-  #         )
-  #       )
-  #     }
-  #   }
-  #
-  #
-  #
-  #   # Curves
-  #   for (curve in values$curve_lines) {
-  #     p <- p %>% add_trace(
-  #       x = curve$x,
-  #       y = curve$y,
-  #       type = "scatter",
-  #       mode = "lines",
-  #       line = list(color = curve$color, width = 2),
-  #       name = paste0("tau=", input$tau)
-  #     )
-  #   }
-  #
-  #   # Annotation
-  #   p <- p %>% layout(
-  #     annotations = list(
-  #       x = 0.02,
-  #       y = 0.98,
-  #       text = paste("Knots:", length(values$knot)),
-  #       xref = "paper",
-  #       yref = "paper",
-  #       showarrow = FALSE,
-  #       font = list(size = 12, color = "red")
-  #     ),
-  #     xaxis = list(title = "x"),
-  #     yaxis = list(title = "y"),
-  #     hovermode = "closest",
-  #     legend = list(orientation = "h", y = -0.1),
-  #     dragmode = if (values$selecting_region &&
-  #                    input$constraint_mode == "region")
-  #       "select"
-  #     else
-  #       "zoom"
-  #   )
-  #
-  #   p <- p %>% config(
-  #     scrollZoom = TRUE,
-  #     displaylogo = FALSE,
-  #     modeBarButtonsToRemove = c("sendDataToCloud", "resetViews")
-  #   )
-  #
-  #   # Dans la création du plot principal (spline_plot)
-  #   # Ajouter un marqueur pour le nœud sélectionné
-  #   selected_idx <- selected_knot()
-  #   if (!is.null(selected_idx) && !is.null(values$knot)) {
-  #     p <- p %>% add_trace(
-  #       x = values$knot[selected_idx],
-  #       y = y_pos,
-  #       type = "scatter",
-  #       mode = "markers",
-  #       marker = list(
-  #         color = "green",
-  #         symbol = "circle",
-  #         size = 20,
-  #           opacity = 0.7
-  #     ),
-  #     name = "Selected Knot"
-  #   )
-  # }
-  #   })
   # ============ KNOT SELECTION FROM VISUALIZATION ============
 
   # Reactive value pour le nœud sélectionné
@@ -2111,15 +1979,14 @@ server <- function(input, output, session) {
       if (!is.null(values$knot)) {
         # Fallback: construire manuellement
         knot <- values$knot
-
         if (input$consider_multiplicity){
-          mult<-values$knot_multiplicity }
-
+          mult<-values$knot_multiplicity
+          }
         else {
           mult<-c(input$degree+1,rep(1,(length(values$knot)-2)),input$degree+1) }
-      sn <- build_knot_sequence(values$knot,mult)}
-
-            else {
+          sn <- build_knot_sequence(values$knot,mult)
+          }
+          else {
         showNotification("No knots available", type = "warning")
         return()
       }
@@ -2162,6 +2029,8 @@ server <- function(input, output, session) {
                        type = "message")
     })
   })
+
+
    output$basis_info <- renderPrint({
     req(basis_values$der_basis_obj)
 
@@ -2239,7 +2108,7 @@ build_knot_sequence <- function(knots, multiplicities) {
 # Initialiser les nœuds avec multiplicités
 init_knots <- function(xtab, n_knots) {
   # Générer des nœuds quantiles
-  knots <- quantile(xtab, probs = seq(0, 1, length.out = n_knots + 1))
+  knots <- as.numeric(quantile(xtab, probs = seq(0, 1, length.out = n_knots + 1)))
 
   # Multiplicités initiales (1 par défaut pour les nœuds internes)
   # Les extrémités ont multiplicité degree + 1
