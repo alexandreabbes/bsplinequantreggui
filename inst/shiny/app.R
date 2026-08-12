@@ -1,7 +1,7 @@
 # BsplineQuantReg Shiny Interface
 # Author: Alexandre Abbes
-# Stable version with graphical region selection
-#
+
+# Version 0.2.0
 # Run with:
 # shiny::runApp("R/run_gui.R")
 
