@@ -13,7 +13,9 @@ run_all_tests <- function() {
     "test-region_management.R",
     "test-regression.R",
     "test-server.R",
-    "test-logic.R"
+    "test-logic.R",
+    "test-app-020.R",
+    "test-supp-020.R"
   )
 
   results <- list()

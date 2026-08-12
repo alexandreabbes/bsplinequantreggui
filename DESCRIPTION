@@ -14,7 +14,7 @@ Description: A user-friendly interactive Shiny interface for the 'BsplineQuantRe
 License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 4.6.0)
-Imports: BsplineQuantReg (>= 0.2.2),
+Imports: BsplineQuantReg (>= 0.2.4),
     shiny,
     shinyjs,
     DT,
