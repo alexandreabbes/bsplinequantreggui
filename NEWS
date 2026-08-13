@@ -1,3 +1,8 @@
+# BsplineQuantRegGui 0.2.1
+- add view human readable coefficents for the fitted spline
+- add view derivatives (plots and coefficents)
+- enhance R code output with additional information
+- move demo in ne tab
 
 ### BsplineQuantRegGui 0.2.0
 ###Changes
