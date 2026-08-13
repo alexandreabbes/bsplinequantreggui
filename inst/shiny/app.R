@@ -210,8 +210,6 @@ ui <- fluidPage(
         )
       ),
 
-
-
       div(
         style = "font-size: 11px; color: #666; text-align: center;",
         p("BsplineQuantRegGui v0.1.0"),
@@ -236,6 +234,12 @@ ui <- fluidPage(
 
             actionButton("remove_knot", "Remove selected knot", class = "btn-sm btn-warning")
             ),
+
+          h5("Selected Knot:"),
+          verbatimTextOutput("selected_knot_display", placeholder = TRUE),
+          conditionalPanel(
+            condition = "output.selected_knot_display != 'No knot selected'"),
+
 
           fluidRow(
             column(9, plotlyOutput("spline_plot", height = "500px")),
@@ -363,7 +367,7 @@ ui <- fluidPage(
 
 
               fluidRow(actionButton("run", "Run", class = "btn-success btn-lg"),
-                actionButton("clear_curves", "Clear curves", class = "btn-sm btn-warning"),
+                actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),
                 column(4,actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")
               )))),
 
@@ -380,14 +384,9 @@ ui <- fluidPage(
 
           ),
 ####info about knots
-# Dans la colonne des contrôles, sous "Constraints" ou "Execution"
-          h5("Selected Knot:"),
-          verbatimTextOutput("selected_knot_display", placeholder = TRUE),
-conditionalPanel(
-  condition = "output.selected_knot_display != 'No knot selected'",
 
-  checkboxInput("consider_multiplicity", "Consider Multiplicity
-  (Warning : experimental. Not fully fonctional with region constraint.)", value = TRUE),
+#          h5("Selected Knot:"),
+#          verbatimTextOutput("selected_knot_display", placeholder = TRUE),
 
 
   h5("Change Knot Multiplicity:"),
@@ -397,50 +396,57 @@ conditionalPanel(
   p("Multiplicity: m, Degree: d => regularity C^{d-m-1}"),
 
 ),
+
+
+
+# ============ AFFICHAGE DES COEFFICIENTS ============
+fluidRow(
+  column(
+    12,
+    radioButtons(
+      "local",
+      "Local basis coefficients display:",
+      choices = c("Canonical (1, x, x²...)" = "FALSE",
+                  "Local ((x-a)^i) for each knot a" = "TRUE"),
+      selected = "TRUE",
+      inline = TRUE
+    ),
+    verbatimTextOutput("bspline_coeff", placeholder = TRUE)
+  )
 ),
-          hr(),
-
-          # Demos
-          # fluidRow(
-          #   column(
-          #     12,
-          #     h5("Run Demos:"),
-          #     actionButton("demo_comp", "Comprehensive", class = "btn-sm btn-info"),
-          #     actionButton("demo_monot", "Monotonicity basic", class = "btn-sm btn-info"),
-          #     actionButton("demo_log", "Logistic", class = "btn-sm btn-info"),
-          #     actionButton("demo_temp", "Temperature", class = "btn-sm btn-info"),
-          #     actionButton("demo_temp2", "Temperature2", class = "btn-sm btn-info"),
-          #     actionButton("demo_conv", "Convexity", class = "btn-sm btn-info"),
-          #     actionButton("demo_degrees", "Degrees", class = "btn-sm btn-info"),
-          #     actionButton("demo_derivative", "Derivative", class = "btn-sm btn-info"),
-          #     actionButton("demo_der3", "Third derivative", class = "btn-sm btn-info")
-          #   )
-          # ),
-          div(
-            id = "demo_area",
-            style = "display: none; margin-top: 10px;",
-            hr(),
-            h4("Demo Results:"),
-            div(
-              style = "overflow: auto; width: 100%; max-height: 1800px;",
-              plotOutput("demo_plot", height = 800)  # Hauteur par défaut, sera modifiée dynamiquement
-            ),
-            br(),
-            verbatimTextOutput("demo_output")
-          ),
 
 
-          #div(id = "demo_area",
-          #     style = "display: none; margin-top: 10px;",
-          #     hr(),
-          #     h4("Demo Results:"),
-          #     plotOutput("demo_plot", width="auto", height = "1500px"),
-          #     br(),
-          #     verbatimTextOutput("demo_output")
-          # )
+
+# ============================================================
+# SECTION 3 : DÉRIVÉES SUCCESSIVES
+# ============================================================
+
+fluidRow(
+  column(12,
+         h4("Derivatives", class = "text-primary"),
+
+         # Boutons radio pour sélectionner les dérivées à afficher
+         radioButtons(
+           "deriv_display",
+           "Display derivatives:",
+           choices = c(
+             "None" = "none",
+             "1st derivative" = "1",
+             "1st & 2nd" = "2",
+             "1st, 2nd & 3rd" = "3"
+           ),
+           selected = "none",
+           inline = TRUE
+         )
+  ),
+uiOutput("derivatives_ui"))
 
 
-        ),
+
+    ),#end tab visualisation
+
+# )#end tab derivatives
+#
 
         tabPanel(
           "Data",
@@ -476,30 +482,7 @@ conditionalPanel(
           h4("R Code to reproduce the analysis:"),
           verbatimTextOutput("r_code")
         ),
-        #tabPanel(
-         # "Basis",
-          #br(),
-          #fluidRow(
-          #  column(3,
-          #         h4("Basis Parameters"),
-          #         h4("Derivative"),
-          #        sliderInput("basis_derivative", "Derivative order:",
-          #                     min = 0, max = 4, value = 0, step = 1),
-          #         hr(),
-          #         h4("Display"),
-          #         checkboxInput("basis_show_knots", "Show knots", value = TRUE),
-          #         #checkboxInput("basis_show_legend", "Show legend", value = TRUE),
-          #         hr(),
-          #         actionButton("basis_update", "Update Basis",
-          #                      class = "btn-primary btn-block"),
-          #         br(),
-          #         p("Knots:", verbatimTextOutput("knots_info", placeholder = TRUE))
-          #  ),
-          #  column(9,
-          #         plotOutput("basis_plot", height = "600px")
 
-          #  )
-          #),
 
 
           tabPanel(
@@ -560,6 +543,22 @@ conditionalPanel(
             verbatimTextOutput("console_output")
           )
         )))
+
+,
+tabPanel('Demo',br(),
+         div(
+           id = "demo_area",
+           style = "display: none; margin-top: 10px;",
+           hr(),
+           h4("Demo Results:"),
+           div(
+             style = "overflow: auto; width: 100%; max-height: 1800px;",
+             plotOutput("demo_plot", height = 800)  # Hauteur par défaut, sera modifiée dynamiquement
+           ),
+           br(),
+           verbatimTextOutput("demo_output")
+         )
+)
       )
     )
   )
@@ -583,7 +582,6 @@ server <- function(input, output, session) {
     multiplicity=NULL,
     auto_knot_count = 10,
     manual_knot = vector(),
-    auto_knot_list = vector(),
     adding_knot = FALSE,
     fitted = NULL,
     x_eval = NULL,
@@ -593,7 +591,9 @@ server <- function(input, output, session) {
     data_name = "No data available",
     region_id = 0,
     selected_region_id = NULL,
-    selecting_region = FALSE
+    selecting_region = FALSE,
+    derivatives = list()
+
   )
 
   # ============ CONSTRAINT SYMBOL FUNCTION ============
@@ -1194,68 +1194,68 @@ server <- function(input, output, session) {
     })
   })
 
-  # ============ EXCEL IMPORT ============
-
-  observeEvent(input$load_excel, {
-    if (!requireNamespace("readxl", quietly = TRUE)) {
-      showNotification(
-        "Install 'readxl' to read Excel files: install.packages('readxl')",
-        type = "error",
-        duration = 10
-      )
-      return()
-    }
-
-    file_path <- file.choose()
-    if (is.na(file_path))
-      return()
-    tryCatch({
-      df <- readxl::read_excel(file_path)
-      df <- as.data.frame(df)
-
-      if (ncol(df) < 2) {
-        showNotification("File must have at least 2 columns!", type = "error")
-        return()
-      }
-
-      x_col <- df[, 1]
-      y_col <- df[, 2]
-
-      valid <- !is.na(x_col) & !is.na(y_col)
-      x_col <- x_col[valid]
-      y_col <- y_col[valid]
-
-      if (length(x_col) < 3) {
-        showNotification("Not enough data (minimum 3 points)", type = "error")
-        return()
-      }
-
-      values$xtab <- as.vector(x_col)
-      values$ytab <- as.vector(y_col)
-      values$data_name <- basename(file_path)
-      values$fitted <- NULL
-      values$curve_lines <- list()
-      values$regions <- list()
-
-      updateNumericInput(session, "data_xmin", value = min(values$xtab))
-      updateNumericInput(session, "data_xmax", value = max(values$xtab))
-
-      values$manual_knot <- vector()
-      kn <- max(input$auto_knot_count, 2) - 1
-      values$knot <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
-
-      showNotification(paste(
-        "File loaded:",
-        basename(file_path),
-        "-",
-        length(x_col),
-        "points"
-      ),
-      type = "success")
-
-    }, error = function(e) {
-      showNotification(paste("Read error:", e$message), type = "error")
-    } )} )
+  # # ============ EXCEL IMPORT ============
+  #
+  # observeEvent(input$load_excel, {
+  #   if (!requireNamespace("readxl", quietly = TRUE)) {
+  #     showNotification(
+  #       "Install 'readxl' to read Excel files: install.packages('readxl')",
+  #       type = "error",
+  #       duration = 10
+  #     )
+  #     return()
+  #   }
+  #
+  #   file_path <- file.choose()
+  #   if (is.na(file_path))
+  #     return()
+  #   tryCatch({
+  #     df <- readxl::read_excel(file_path)
+  #     df <- as.data.frame(df)
+  #
+  #     if (ncol(df) < 2) {
+  #       showNotification("File must have at least 2 columns!", type = "error")
+  #       return()
+  #     }
+  #
+  #     x_col <- df[, 1]
+  #     y_col <- df[, 2]
+  #
+  #     valid <- !is.na(x_col) & !is.na(y_col)
+  #     x_col <- x_col[valid]
+  #     y_col <- y_col[valid]
+  #
+  #     if (length(x_col) < 3) {
+  #       showNotification("Not enough data (minimum 3 points)", type = "error")
+  #       return()
+  #     }
+  #
+  #     values$xtab <- as.vector(x_col)
+  #     values$ytab <- as.vector(y_col)
+  #     values$data_name <- basename(file_path)
+  #     values$fitted <- NULL
+  #     values$curve_lines <- list()
+  #     values$regions <- list()
+  #
+  #     updateNumericInput(session, "data_xmin", value = min(values$xtab))
+  #     updateNumericInput(session, "data_xmax", value = max(values$xtab))
+  #
+  #     values$manual_knot <- vector()
+  #     kn <- max(input$auto_knot_count, 2) - 1
+  #     values$knot <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
+  #
+  #     showNotification(paste(
+  #       "File loaded:",
+  #       basename(file_path),
+  #       "-",
+  #       length(x_col),
+  #       "points"
+  #     ),
+  #     type = "success")
+  #
+  #   }, error = function(e) {
+  #     showNotification(paste("Read error:", e$message), type = "error")
+  #   } )} )
 
 
   # ============ REGRESSION ============
@@ -1310,7 +1310,7 @@ server <- function(input, output, session) {
         verbose = input$verbose,
         callable = TRUE
       )
-      log_console(print(args$knot))
+      if (input$verbose) log_console(print(args$knot ))
 
       # Ajouter le paramètre type_reg si la version est >= 0.2.3
       if (version >= "0.2.3") {
@@ -1348,11 +1348,11 @@ server <- function(input, output, session) {
         values$x_eval <- x_eval
         values$y_eval <- y_eval
         color <- input$curve_color
-        values$curve_lines <- c(values$curve_lines, list(list(
+        values$curve_lines <- c( list(list(
           x = x_eval,
           y = y_eval,
           color = color
-        )))
+        )),values$curve_lines)
         showNotification("Regression successful!", type = "message")
       } else {
         log_console("=== Regression failed ===", "error")
@@ -1377,22 +1377,6 @@ server <- function(input, output, session) {
 
       log_console(paste("BsplineQuantReg version:", packageVersion("BsplineQuantReg")))
       if (!is.null(fitted)) {
-
-
-
-        x_eval <- seq(min(values$xtab), max(values$xtab), length.out = 300)
-        y_eval <- BsplineQuantReg::spline_eval(fitted,x_eval)
-        values$fitted <- fitted
-        values$x_eval <- x_eval
-        values$y_eval <- y_eval
-        color <- input$curve_color
-        values$curve_lines <- c(values$curve_lines, list(list(
-          x = x_eval,
-          y = y_eval,
-          color = color
-        )))
-        showNotification("Regression successful!", type = "message")
-        #lapply(console_text, function(line) if(nchar(line)>0) log_console(line))
 
 
       }
@@ -1636,7 +1620,7 @@ server <- function(input, output, session) {
         })
     })
 
-      #===INFO==GENERAL
+   #===INFO==GENERAL
     output$fit_info <- renderPrint(
         {tryCatch({
         cat("Solver: ",input$solver,"\n")
@@ -1723,6 +1707,169 @@ server <- function(input, output, session) {
     }))
   })
 
+  #============= bspline coefficients ======================
+  output$bspline_coeff<-renderPrint(
+    {if (is.null(values$fitted)){return("No regression")}
+      else{
+        return(
+          show_pp(values$fitted,local=input$local,verbose=input$verbose)
+        )
+
+      }
+    }
+  )
+
+  # ============================================================================
+  # UI POUR LES DÉRIVÉES
+  # ============================================================================
+
+  output$derivatives_ui <- renderUI({
+    req(values$fitted)
+
+    selected <- input$deriv_display
+    if (selected == "none") {
+      return(NULL)
+    }
+
+    n_deriv <- as.numeric(selected)
+    plot_list <- list()
+
+    for (d in 1:n_deriv) {
+      # Nom de la dérivée
+      deriv_names <- c("1st derivative", "2nd derivative", "3rd derivative")
+
+      # Créer la ligne avec le plot et les coefficients
+      plot_list[[d]] <- fluidRow(
+        column(6,
+               plotlyOutput(paste0("deriv_plot_", d), height = "250px")
+        ),
+        column(6,
+               h5(paste("Coefficients of", deriv_names[d])),
+               verbatimTextOutput(paste0("deriv_coeff_", d))
+        )
+      )
+
+      # Ajouter un séparateur
+      if (d < n_deriv) {
+        plot_list[[d]] <- tagList(plot_list[[d]], hr())
+      }
+    }
+
+    do.call(tagList, plot_list)
+  })
+
+  # ============================================================================
+  # RENDU DES PLOTS DE DÉRIVÉES
+  # ============================================================================
+
+  observe({
+    selected <- input$deriv_display
+    if (selected == "none") return()
+
+    n_deriv <- as.numeric(selected)
+
+    for (d in 1:n_deriv) {
+      local({
+        der <- d
+        output_name <- paste0("deriv_plot_", der)
+
+        output[[output_name]] <- renderPlotly({
+          req(values$fitted)
+          req(values$xtab)
+
+          # Calculer la dérivée
+          deriv_spline <- Bspline_deriv(values$fitted, der = der)
+
+          x_vals <- seq(min(values$xtab, na.rm = TRUE),
+                        max(values$xtab, na.rm = TRUE),
+                        length.out = 300)
+
+          # Évaluer la dérivée
+          if (inherits(deriv_spline, "callable_spline") || inherits(deriv_spline, "function")) {
+            y_vals <- deriv_spline(x_vals)
+          } else {
+            y_vals <- spline_eval(deriv_spline, x_vals)
+          }
+
+          colors <- c("blue", "darkgreen", "purple")
+          deriv_names <- c("1st derivative", "2nd derivative", "3rd derivative")
+
+          plot_ly(
+            x = x_vals,
+            y = y_vals,
+            type = "scatter",
+            mode = "lines",
+            line = list(color = colors[der], width = 2),
+            name = deriv_names[der]
+          ) %>%
+            layout(
+              title = deriv_names[der],
+              xaxis = list(title = "x"),
+              yaxis = list(title = paste0("f^(", der, ")(x)")),
+              hovermode = "closest"
+            )
+        })
+      })
+    }
+  })
+
+  # ============================================================================
+  # AFFICHAGE DES COEFFICIENTS DES DÉRIVÉES
+  # ============================================================================
+
+  observe({
+    selected <- input$deriv_display
+    if (selected == "none") return()
+
+    n_deriv <- as.numeric(selected)
+
+    for (d in 1:n_deriv) {
+      local({
+        der <- d
+        output_name <- paste0("deriv_coeff_", der)
+
+        output[[output_name]] <- renderPrint({
+          req(values$fitted)
+
+          # Calculer la dérivée
+          deriv_spline <- Bspline_deriv(values$fitted, der = der)
+
+          # Convertir en PP
+          deriv_pp <- Bsplinetopp(deriv_spline, callable = FALSE)
+
+          local_display <- if (is.null(input$local)) TRUE else as.logical(input$local)
+
+          coeff_matrix <- deriv_pp$coeff
+          knot <- deriv_pp$knot
+
+          cat("Derivative order:", der, "\n")
+          cat("Degree:", deriv_pp$degree, "\n")
+          cat("Number of intervals:", length(knot) - 1, "\n\n")
+
+          if (is.matrix(coeff_matrix)) {
+            cat("Polynomial coefficients on each interval:\n\n")
+            for (i in 1:nrow(coeff_matrix)) {
+              cat(sprintf("[%.4f, %.4f]: ", knot[i], knot[i+1]))
+              poly_str <- show_poly(coeff_matrix[i, ],
+                                    a = knot[i],
+                                    b = if (local_display) knot[i] else 0,
+                                    digits = 4)
+              cat(poly_str, "\n")
+            }
+          } else {
+            cat("Polynomial coefficients:\n")
+            poly_str <- show_poly(coeff_matrix,
+                                  a = knot[1],
+                                  b = if (local_display) knot[1] else 0,
+                                  digits = 4)
+            cat(poly_str, "\n")
+          }
+        })
+      })
+    }
+  })
+
+####============DATA
   output$data_summary <- renderPrint({
     if (is.null(values$xtab)) {
       cat("No data")
@@ -1788,9 +1935,35 @@ server <- function(input, output, session) {
     if (is.null(constraints)) {
       return("# Error: constraints not defined")
     }
-    mult_knot<-build_knot_sequence(
-      values$knot,
-      values$knot_multiplicity)
+    ###########adding derivatives##############
+    n_deriv<-input$deriv_display
+    deriv_plot=""
+    deriv_code=""
+    if (n_deriv != "none") {
+      deriv_plot<-paste("#### Add plots of the derivatives #### \n")
+
+      colors <- c("blue", "darkgreen", "purple")
+      n_deriv <- as.numeric(n_deriv)
+
+      for (d in 1:n_deriv) {
+        deriv_code <- paste0(deriv_code, "\n# ", " derivative",d,"\n")
+        deriv_code <- paste0( deriv_code, "deriv_", d, " <- Bspline_deriv(fitted, der = ", d, ")\n" )
+
+        # Ajouter l'évaluation
+        deriv_code <- paste0(deriv_code, "deriv_", d, "_eval <- deriv_", d, "(x_eval)\n")
+
+        deriv_plot <- paste0(deriv_plot, "plot(x_eval, deriv_",d, "_eval," , "pch = 16, cex = 0.5, col = 'gray',\n",
+                             "     main = 'Spline  derivatives", d,"')" , "\n" )
+
+        deriv_plot <- paste0(deriv_plot,
+                             "lines(x_eval, deriv_", d, "_eval, col = '",
+                             colors[d], "', lwd = 1.5, lty = ", d+1, ")\n")
+      }
+
+
+
+    }
+
     paste0(
       "library(BsplineQuantReg)\n\n",
       "x <- c(",
@@ -1800,11 +1973,9 @@ server <- function(input, output, session) {
       paste(round(values$ytab, 4), collapse = ", "),
       ")\n",
       "knot <- c(",
-      paste(round(mult_knot, 4), collapse = ", "),
-      #paste(round(values$knot, 4), collapse = ", "),
+      paste(round(values$knot, 4), collapse = ", "),
       ")\n\n",
-      "fitted <- quantile_spline(x, y,\n",
-      "                        knot=knot",
+      "fitted <- quantile_spline(x, y, knot,\n",
       "                       tau = ",
       input$tau,
       ",\n",
@@ -1826,12 +1997,20 @@ server <- function(input, output, session) {
       "                       callable = TRUE)\n\n",
       "x_eval <- seq(min(x), max(x), length.out = 300)\n",
       "y_eval <- fitted(x_eval)\n\n",
-      "plot(x, y, pch = 16, cex = 0.5, col = 'gray')\n",
+      "par(mfrow=c(",n_deriv+1,",1))\n",
+      "plot(x, y, pch = 16, cex = 0.5, col = 'gray',main='fitted spline')\n",
       "lines(x_eval, y_eval, col = '",
       input$curve_color,
-      "', lwd = 2)"
+      "', lwd = 2)\n",
+      "#PP-Polynomial coefficients of spline\n",
+      "Co=show_pp(fitted,local=",input$local,")", "\n",
+      "print(Co)\n",
+      deriv_code,
+      deriv_plot
     )
   })
+
+
 
   # ============ ACTIONS ============
 
@@ -1840,8 +2019,8 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$clear_curves, {
-    values$curve_lines <- list()
-    showNotification("Curves cleared", type = "message")
+    values$curve_lines[1] <- NULL
+    showNotification("Last curve cleared", type = "message")
   })
 
   observeEvent(input$clear_all, {
@@ -1932,6 +2111,8 @@ server <- function(input, output, session) {
     })
   }
 
+
+
   # Exécuter les démos
   observeEvent(input$demo_comp, {
     execute_demo("comprehensive")
@@ -1973,6 +2154,10 @@ server <- function(input, output, session) {
       cat(paste(demo_results$output, collapse = "\n"))
     }
   })
+
+
+
+
 ################VIEW BASIS
   # ============ BASIS ============
   basis_values <- reactiveValues(
