@@ -9,7 +9,10 @@ importFrom(DT,
   renderDT
 )
 importFrom(colourpicker,colourInput)
-importFrom(grDevices,png)
+importFrom(grDevices,
+  dev.off,
+  png
+)
 importFrom(plotly,
   plot_ly,
   plotlyOutput,
@@ -25,3 +28,5 @@ importFrom(shiny,
 )
 importFrom(shinyjs,useShinyjs)
 importFrom(shinythemes,shinytheme)
+importFrom(stats,quantile)
+importFrom(utils,capture.output)
