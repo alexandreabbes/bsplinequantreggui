@@ -11,12 +11,12 @@ test_that("Regression with multiplicity works", {
 
   data <- create_test_data(n = 50)
   knots <- c(0, 0.25, 0.5, 0.75, 1)
-  multiplicities <- c(4, 1, 1, 1, 4)  # degree=3 => degree+1=4 aux extrémités
+  multiplicities <- c(4, 1, 3, 1, 4)  # degree=3 => degree+1=4 aux extrémités
 
   knot_seq <- build_knot_sequence(knots, multiplicities)
 
   # Vérifier que la séquence est correcte
-  expected <- c(0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1)
+  expected <- c(0, 0, 0, 0, 0.25, 0.5, 0.5, 0.5, 0.75, 1, 1, 1, 1)
   expect_equal(knot_seq, expected)
 
   # Vérifier que la régression fonctionne avec la séquence étendue

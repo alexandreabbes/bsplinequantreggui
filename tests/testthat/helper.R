@@ -7,7 +7,19 @@
 library(testthat)
 library(BsplineQuantReg)
 
-app_dir <- system.file("shiny", package = "BsplineQuantRegGui")
+# ============================================================================
+# CHARGEMENT DES FONCTIONS DE L'APP
+# ============================================================================
+
+# Source les fonctions de l'App depuis helper-functions-App.R
+# Ce fichier contient: build_knot_sequence, init_knots, update_knot_multiplicity,
+# build_constraints, get_sym, update_region_fields, execute_demo
+
+source("helper-functions-App.R", local = TRUE)
+
+# ============================================================================
+# COMMON TEST HELPERS
+# ============================================================================
 
 # Skip on CRAN or non-interactive sessions
 skip_if_not_interactive <- function() {
@@ -68,14 +80,12 @@ get_app_dir <- function() {
     }
   }
 
-  # For devtools::test() from package root
   if (file.exists("DESCRIPTION") && dir.exists("inst/shiny")) {
     return(normalizePath("inst/shiny"))
   }
 
   stop("Could not find Shiny app directory")
 }
-
 
 # Safe operations with timeouts
 safe_click <- function(app, input, timeout_ = 30000, ...) {

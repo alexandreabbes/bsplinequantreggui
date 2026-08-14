@@ -15,6 +15,7 @@ run_all_tests <- function() {
     "test-server.R",
     "test-logic.R",
     "test-app-020.R",
+    "test-gui-020.R",
     "test-supp-020.R"
   )
 
