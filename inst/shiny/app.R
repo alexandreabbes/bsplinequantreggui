@@ -160,6 +160,7 @@ ui <- fluidPage(
       fluidRow(h6(column(
         6, checkboxInput("verbose", "Verbose", FALSE)
         )
+
       )),
 
       hr(),
@@ -373,7 +374,14 @@ ui <- fluidPage(
 
           br(),
 
+          #MULTIPLICITY
+          h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => regularity C^{d-m-1}) ",
+             checkboxInput("consider_multiplicity_main","Consider Multiplicity", value=TRUE )),
+          column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
+                 actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
+                 actionButton("reset_multiplicity", "Reset multiplicity", class = "btn-sm btn-info")
 
+          ),
           # Information (unique)
           fluidRow(
             column(6, h5("Information"), verbatimTextOutput("fit_info")),
@@ -389,13 +397,6 @@ ui <- fluidPage(
 #          verbatimTextOutput("selected_knot_display", placeholder = TRUE),
 
 
-  h5("Change Knot Multiplicity:"),
-    column(6, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
-     actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
-  actionButton("reset_multiplicity", "Reset multiplicity", class = "btn-sm btn-info"),
-  p("Multiplicity: m, Degree: d => regularity C^{d-m-1}"),
-
-),
 
 
 
@@ -504,7 +505,7 @@ uiOutput("derivatives_ui"))
                   checkboxInput("basis_show_multiplicity", "Show multiplicity labels", value = TRUE),
                   actionButton("basis_update", "Update Basis",
                                class = "btn-primary btn-block"),
-                  checkboxInput("consider_multiplicity","Consider Multiplicity",TRUE),
+                  checkboxInput("consider_multiplicity","Consider Multiplicity",value=TRUE),
 
 
                   hr(),
@@ -592,8 +593,8 @@ server <- function(input, output, session) {
     region_id = 0,
     selected_region_id = NULL,
     selecting_region = FALSE,
-    derivatives = list()
-
+    derivatives = list(),
+    consider_multiplicity=TRUE
   )
 
 
@@ -2011,6 +2012,7 @@ server <- function(input, output, session) {
     multiplicities = NULL,
     selected_knot_index = NULL
   )
+
   # Reactive values pour la base
   #basis_values <- reactiveValues(
   #  basis_obj = NULL,
@@ -2132,8 +2134,8 @@ server <- function(input, output, session) {
       for (i in 1:l) {
         mult <- values$knot_multiplicity[i]
         if (mult > 0) {
-          text(values$knot[i], y_pos,
-               labels = paste0("m=", mult),
+          text(values$knot[i], y_pos, if (input$basis_show_multiplicity){
+               labels = paste0("m=", mult)}else{""},
                col = "blue", cex = 0.7, srt = 90, adj = 0)
         }
       }
@@ -2143,6 +2145,28 @@ server <- function(input, output, session) {
 
 
 # ============ MULTIPLICITY CONTROL ============
+
+  observeEvent(input$consider_multiplicity, {
+    values$consider_multiplicity <- input$consider_multiplicity
+    updateCheckboxInput(session, "consider_multiplicity_main",
+                        value = input$consider_multiplicity)
+  })
+
+  # Synchronisation : Main → Basis
+  observeEvent(input$consider_multiplicity_main, {
+    values$consider_multiplicity <- input$consider_multiplicity_main
+    updateCheckboxInput(session, "consider_multiplicity",
+                        value = input$consider_multiplicity_main)
+  })
+
+  # Initialisation (au démarrage)
+  observe({
+    # Mettre à jour les deux checkbox avec la valeur initiale
+    updateCheckboxInput(session, "consider_multiplicity_basis",
+                        value = values$consider_multiplicity)
+    updateCheckboxInput(session, "consider_multiplicity_main",
+                        value = values$consider_multiplicity)
+  })
 
 
 # ============ KNOT MULTIPLICITY CONTROL ============
@@ -2414,7 +2438,7 @@ build_constraints <- function() {
       }
     }
   }
-  if (input$consider_multiplicity){
+  if (values$consider_multiplicity){
     mult_monot<-c(monot[1])
     mult_conv<-c(conv[1])
     mult_der3<-c(der3[1])
