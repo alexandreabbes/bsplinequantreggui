@@ -2194,7 +2194,7 @@ observeEvent(input$reset_multiplicity, {
     update_knot_multiplicity(idx, 1)}
 })
 
-}# End server()
+
 
 
 #--------------------------------------------------
@@ -2445,7 +2445,7 @@ build_constraints <- function() {
 #=============================================================
 
 
-
+}# End server()
 
 # Run app
 shinyApp(ui = ui, server = server)
