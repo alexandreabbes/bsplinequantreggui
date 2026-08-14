@@ -211,4 +211,4 @@ GPL-3.
 
 ------------------------------------------------------------------------
 
-**Last Updated:** 2026-08-11 **Maintainer:** Alexandre Abbes
+**Last Updated:** 2026-08-14 **Maintainer:** Alexandre Abbes
