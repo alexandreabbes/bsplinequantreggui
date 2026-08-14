@@ -37,7 +37,7 @@ RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantReg', ref = 'with_
 RUN R -e " packageVersion('BsplineQuantReg') "
 
 # Installer BsplineQuantRegGui (pour les dépendances)
-RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main')"
+RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main3')"
 
 # Copier le code source dans le conteneur
 COPY . /app
