@@ -1,7 +1,7 @@
 # BsplineQuantReg Shiny Interface
 # Author: Alexandre Abbes
 
-# Version 0.2.0
+# Version 0.2.1
 # Run with:
 # shiny::runApp("R/run_gui.R")
 
