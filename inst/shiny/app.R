@@ -1249,11 +1249,11 @@ server <- function(input, output, session) {
         values$x_eval <- x_eval
         values$y_eval <- y_eval
         color <- input$curve_color
-        values$curve_lines <- c( list(list(
+        values$curve_lines <- c(values$curve_lines,list(list(
           x = x_eval,
           y = y_eval,
           color = color
-        )),values$curve_lines)
+        )))
         showNotification("Regression successful!", type = "message")
       } else {
         log_console("=== Regression failed ===", "error")
@@ -1920,7 +1920,8 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$clear_curves, {
-    values$curve_lines[1] <- NULL
+    ncurves<-length(values$curve_lines)
+    values$curve_lines[ncurves] <- NULL
     showNotification("Last curve cleared", type = "message")
   })
 
