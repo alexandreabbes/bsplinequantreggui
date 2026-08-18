@@ -1,3 +1,12 @@
+#BsplineQuantRegGui 0.2.2
+### Fixes :
+- update end knots multiplicities according to degree.
+
+### Problem :
+- for degree=1: monotone regression with knot multiplicities cuase the solvers to hang
+Problem of the core programm, not solved yet.
+
+
 # BsplineQuantRegGui 0.2.1
 ### Changes
 - add view human readable coefficents for the fitted spline

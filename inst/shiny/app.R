@@ -369,14 +369,17 @@ ui <- fluidPage(
 
               fluidRow(actionButton("run", "Run", class = "btn-success btn-lg"),
                 actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),
+                actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger"),
                 column(4,actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")
               )))),
 
           br(),
 
           #MULTIPLICITY
-          h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => regularity C^{d-m-1}) ",
+          h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => minimum regularity at knot is C^{d-m}. C^{-1}:discontinuous) ",
+
              checkboxInput("consider_multiplicity_main","Consider Multiplicity", value=TRUE )),
+          h5("Warning: Degree=1 and any Multiplicity>1 cannot handle constraints"),
           column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
                  actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
                  actionButton("reset_multiplicity", "Reset multiplicity", class = "btn-sm btn-info")
@@ -510,7 +513,7 @@ uiOutput("derivatives_ui"))
 
                   hr(),
                   h4("Knot Multiplicities"),
-                  verbatimTextOutput("basis_multiplicity_info", placeholder = TRUE),
+                  verbatimTextOutput("multiplicity_info", placeholder = TRUE),
 
                   hr(),
 
@@ -583,6 +586,7 @@ server <- function(input, output, session) {
     multiplicity=NULL,
     auto_knot_count = 10,
     manual_knot = vector(),
+    extended=vector(),
     adding_knot = FALSE,
     fitted = NULL,
     x_eval = NULL,
@@ -892,7 +896,7 @@ server <- function(input, output, session) {
   )
 
   # update the knot list on particular events
-  observeEvent(c(input$auto_knot_count, input$generate_custom), {
+  observeEvent(c(input$auto_knot_count, input$generate_custom),  {
     req(values$xtab)
     req(input$auto_knot_count >= 2)
 
@@ -1186,6 +1190,9 @@ server <- function(input, output, session) {
       # Vérifier la version de BsplineQuantReg
       version <- packageVersion("BsplineQuantReg")
       #Extended knot sequence with interior multiplicities (regularity control)
+      if (input$degree==1 && input$consider_multiplicity && any(constraints$monot!=0)){
+        showNotification("Constraints do not work now with multplie knots for degree 1", type="warning" )
+        }
       if (input$consider_multiplicity)
         {
         mult_knot<-build_knot_sequence(
@@ -1913,10 +1920,15 @@ server <- function(input, output, session) {
 
 
 
-  # ============ ACTIONS ============
+  # ============ ACTIONS on CURVES ============
 
   observeEvent(input$apply_color, {
     showNotification(paste("Color:", input$curve_color), type = "message")
+  })
+
+  observeEvent(input$clear_all_curves, {
+    values$curve_lines <- list()
+    showNotification("All curves cleared", type = "message")
   })
 
   observeEvent(input$clear_curves, {
@@ -2009,21 +2021,9 @@ server <- function(input, output, session) {
     der_basis_obj = NULL,
     x_eval = NULL,
     y_eval = NULL,
-    knots = NULL,
-    multiplicities = NULL,
-    selected_knot_index = NULL
+    derivative=0
   )
 
-  # Reactive values pour la base
-  #basis_values <- reactiveValues(
-  #  basis_obj = NULL,
-  #  der_basis_obj = NULL,
-  #  x_eval = NULL,
-  #  y_eval = NULL
-  #)
-  #veriosn3
-
-  #version2
   observeEvent(input$basis_update, {
     if (is.null(values$knot)){showNotification("No knot available",type="warning")
       return()}
@@ -2071,13 +2071,10 @@ server <- function(input, output, session) {
       basis_values$basis_obj <- basis_obj
       basis_values$der_basis_obj <- der_basis_obj
       basis_values$x_eval <- x_eval
-      basis_values$degree <- degree
       basis_values$derivative <- der
-      basis_values$knots <- knot
+
 
       # Initialiser les multiplicités (1 par défaut)
-      basis_values$multiplicities <- rep(1, length(knot))
-      basis_values$selected_knot_index <- NULL
 
       showNotification(paste("Basis generated (degree", degree, ",", length(knot), "knots)"),
                        type = "message")
@@ -2099,12 +2096,12 @@ server <- function(input, output, session) {
     cat("Degree:", obj$degree, "\n")
     cat("Original degree:", input$degree, "\n")
     cat("Number of basis functions:", obj$n_splines, "\n")
-    cat("Number of knots:", length(basis_values$knots %||% numeric(0)), "\n")
+    cat("Number of knots:", length(values$knots %||% numeric(0)), "\n")
     cat("Derivative order:", input$basis_derivative, "\n")
     cat("Basis dimension:", paste(dim(obj$base), collapse = " x "), "\n")
   })
 
-  output$basis_multiplicity_info <- renderPrint({
+  output$multiplicity_info <- renderPrint({
     if (!is.null(values$knot)) {
         cat("Knot multiplicities:\n")
       l=length(values$knot)
@@ -2167,6 +2164,7 @@ server <- function(input, output, session) {
                         value = values$consider_multiplicity)
     updateCheckboxInput(session, "consider_multiplicity_main",
                         value = values$consider_multiplicity)
+
   })
 
 
@@ -2206,15 +2204,30 @@ observeEvent(input$dec_multiplicity, {
   showNotification(paste("Decreased multiplicity of knot", idx), type = "message")
 })
 
-#update end knots multiplicities
+#update knots multiplicities
 observeEvent(input$degree,{
-  values$multiplicity[1]<-input$degree+1
-  rev(values$multiplicity)[1]<input$degree+1
+  if (!is.null(values$knot_multiplicity)){
+  kn<-length(values$knot)-1
+  degree<-input$degree
+  values$knot_multiplicity[1]<-degree+1
+  values$knot_multiplicity[kn+1]<-degree+1
+  #limit intern multiplicities
+  for (i in 2:kn){
+  if (values$knot_multiplicity[i]>(degree+1))
+  {
+    values$knot_multiplicity[i]<-degree+1
+  }}
+  }
+
 })
+
+
 
 #reset la multiplicite
 observeEvent(input$reset_multiplicity, {
   kn=length(values$knot)
+  update_knot_multiplicity(1,values$degree+1)
+  update_knot_multiplicity(kn,values$degree+1)
   for (idx in 2:(kn-1)){
     update_knot_multiplicity(idx, 1)}
 })
@@ -2254,16 +2267,16 @@ build_knot_sequence <- function(knots, multiplicities)
 # Initialiser les nœuds avec multiplicités
 init_knots <- function(xtab, n_knots) {
   # Générer des nœuds quantiles
-  knots <- as.numeric(quantile(xtab, probs = seq(0, 1, length.out = n_knots + 1)))
+  knot<- as.numeric(quantile(xtab, probs = seq(0, 1, length.out = n_knots + 1)))
 
   # Multiplicités initiales (1 par défaut pour les nœuds internes)
   # Les extrémités ont multiplicité degree + 1
   degree <- input$degree
-  mult <- rep(1, length(knots))
+  mult <- rep(1, length(knot))
   mult[1] <- degree + 1
   mult[length(mult)] <- degree + 1
 
-  return(list(knots = knots, multiplicities = mult))
+  return(list(knot = knot, multiplicities = mult))
 }
 
 
@@ -2286,15 +2299,14 @@ update_knot_multiplicity <- function(idx, new_mult) {
 
   # Mettre à jour les métadonnées
   values$knot_multiplicity[idx] <- new_mult
+  values$knot_multiplicity[1]<-degree+1
+  values$knot_multiplicity[length(values$knot)]<-degree+1
 
   # Reconstruire la séquence étendue
   values$knot_extended <- build_knot_sequence(
     values$knot,
     values$knot_multiplicity
   )
-
-  # Garder le vecteur knot pour compatibilité
-  values$knot <- values$knot
 
   showNotification(paste("Knot", idx, "multiplicity set to", new_mult),
                    type = "message")
@@ -2398,22 +2410,21 @@ build_constraints <- function() {
   }
   degree <- input$degree
   kn <- length(values$knot) - 1
+    # Contraintes uniformes
+    if (input$constraint_mode == "uniform") {
+     monot_val <- as.numeric(input$monot)
+     conv_val <- as.numeric(input$conv)
+     der3_val <- as.numeric(input$der3)
 
-  # Contraintes uniformes
-  if (input$constraint_mode == "uniform") {
-    monot_val <- as.numeric(input$monot)
-    conv_val <- as.numeric(input$conv)
-    der3_val <- as.numeric(input$der3)
+     if (is.na(monot_val)) monot_val <- 0
+     if (is.na(conv_val)) conv_val <- 0
+     if (is.na(der3_val)) der3_val <- 0
 
-    if (is.na(monot_val)) monot_val <- 0
-    if (is.na(conv_val)) conv_val <- 0
-    if (is.na(der3_val)) der3_val <- 0
+     monot <- rep(monot_val, kn + 1)
+     conv <- rep(conv_val, kn + 1)
+     der3 <- rep(der3_val, kn + 1)
 
-    monot <- rep(monot_val, kn+1)
-    conv <- rep(conv_val, kn + 1)
-    der3 <- rep(der3_val, kn + 1)
-
-    if (degree < 3) {der3 <- rep(0, kn + 1)}
+     if (degree < 3) {der3 <- rep(0, kn + 1)}
 
   }
   else {
@@ -2439,7 +2450,9 @@ build_constraints <- function() {
       }
     }
   }
-  if (values$consider_multiplicity){
+
+  if (input$consider_multiplicity)
+    {
     mult_monot<-c(monot[1])
     mult_conv<-c(conv[1])
     mult_der3<-c(der3[1])
