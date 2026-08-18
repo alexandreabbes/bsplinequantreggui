@@ -1,0 +1,2510 @@
+# BsplineQuantReg Shiny Interface
+# Author: Alexandre Abbes
+
+# Version 0.2.1
+# Run with:
+# shiny::runApp("R/run_gui.R")
+
+if (exists("spline_eval"))
+  { rm('spline_eval')
+  cat("Suppression de spline_eval du .GlobalEnv\n")
+}
+
+library(BsplineQuantReg)
+
+
+library(shiny)
+library(shinyjs)
+library(ECOSolveR)
+
+library(DT)
+library(plotly)
+library(colourpicker)
+library(shinythemes)
+library(png)
+
+# UI ----------------------------------------------------------------------
+
+ui <- fluidPage(
+  theme = shinytheme("flatly"),
+  useShinyjs(),
+  tags$style(
+    HTML(
+      "
+    .shiny-notification-success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .region-box {
+      border: 2px solid #ff9800;
+      background-color: rgba(255, 152, 0, 0.15);
+      border-radius: 5px;
+      padding: 8px;
+      margin: 4px 0;
+    }
+  "
+    )
+  ),
+
+  titlePanel(
+    h2(
+      "BsplineQuantReg - Quantile Regression with B-Splines under Shape Constraints",
+      align = "center",
+      style = "color: #2c3e50;"
+    ),
+    windowTitle = "BsplineQuantRegGui"
+  ),
+  #themeSelector(),
+  div(
+    style = "position: absolute; top: 10px; right: 20px; z-index: 1000;",
+    actionButton("toggle_theme", "Themes", class = "btn-sm btn-outline-secondary", style = "border-radius: 20px; padding: 5px 15px;")
+  ),
+
+  # Et la zone pour le themeSelector (cachée par défaut)
+  div(
+    id = "theme_selector_area",
+    style = "display: none; position: absolute; top: 50px; right: 20px; z-index: 1000;
+           background: white; padding: 15px; border-radius: 8px;
+           box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 250px;",
+    h5("Select Theme:"),
+    themeSelector()
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      width = 3,
+      style = "background-color: #f8f9fa; border-radius: 5px;",
+
+      # ============ 1. DATA ============
+      h3("1. Data", class = "text-primary"),
+
+      div(
+        style = "display: flex; flex-wrap: wrap; gap: 5px;",
+        actionButton("test_data", "Test", class = "btn-sm btn-success", style = " background-color:#000000;"),
+        actionButton("temp_data", "Temp", class = "btn-sm btn-warning", style = "background-color:#FF0000;"),
+        actionButton("load_csv", "CSV", class = "btn-sm btn-info", style = "background-color:#10AA10;")
+      ),
+      br(),
+
+      h5("Interval:"),
+      h6(fluidRow(
+        column(
+          4,
+          numericInput("data_xmin", "X min:", value = 0, step = 0.05),
+          style = "padding-right: 1px;"
+        ),
+        column(
+          4,
+          numericInput("data_xmax", "X max:", value = 1, step = 0.05),
+          style = "padding-right: 1px;"
+        ),
+        column(
+          4,
+          numericInput(
+            "n_points",
+            "n:",
+            value = 100,
+            min = 10,
+            max = 1000
+          ),
+          style = "padding-right: 1px;"
+        )
+      )),
+
+      p("Custom function:"),
+      fluidRow(column(
+        12,
+        textInput("custom_func", NULL, value = "2*x + 0.5*sin(6*pi*x) + 0.2*rnorm(n)")
+      ), ),
+
+      actionButton("generate_custom", "Generate", class = "btn-sm btn-primary"),
+
+      hr(),
+
+      # ============ 2. SPLINE ============
+      h3("2. Spline", class = "text-primary"),
+
+      fluidRow(column(
+        6, numericInput(
+          "degree",
+          "Degree:",
+          value = 3,
+          min = 1,
+          max = 4
+        )
+      ), column(
+        6,
+        numericInput(
+          "auto_knot_count",
+          "Auto knots:",
+          value = 10,
+          min = 2,
+          max = 30
+        )
+      )),
+
+      br(),
+
+      fluidRow(sliderInput(
+        "tau",
+        "Tau:",
+        min = 0.05,
+        max = 0.95,
+        value = 0.5
+      )),
+      br(),
+      fluidRow(h6(column(6, selectInput("solver","Solver:",
+          choices = c("ECOS", "SCS","CLARABEL", "HIGHS", "OSQP", "GUROBI") ) ),
+        column(6,selectInput("type_reg","Type of Regr.",
+                      choices=c('quantile','mean_square') ) ))),
+      fluidRow(h6(column(
+        6, checkboxInput("verbose", "Verbose", FALSE)
+        )
+
+      )),
+
+      hr(),
+
+      #  5. Demos" :
+
+      h3("5. Demos", class = "text-primary"),
+      div(
+        style = "display: flex; flex-wrap: wrap; gap: 5px;",
+        actionButton(
+          "demo_comp",
+          "Comprehensive",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        ),
+        actionButton(
+          "demo_monot",
+          "Monotonicity Basic",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        ),
+        actionButton("demo_log", "Logistic", class = "btn-sm btn-info", style = "flex:1;"),
+        actionButton(
+          "demo_temp",
+          "Temperature",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        ),
+        actionButton(
+          "demo_temp2",
+          "Temperature2",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        ),
+        actionButton("demo_conv", "Convexity", class = "btn-sm btn-info", style = "flex:1;"),
+        actionButton("demo_degrees", "Degrees", class = "btn-sm btn-info", style = "flex:1;"),
+        actionButton(
+          "demo_der3",
+          "Third derivative",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        ),
+        actionButton(
+          "demo_derivative",
+          "Derivative",
+          class = "btn-sm btn-info",
+          style = "flex:1;"
+        )
+      ),
+
+      div(
+        style = "font-size: 11px; color: #666; text-align: center;",
+        p("BsplineQuantRegGui v0.1.0"),
+        p("BsplineQuantReg 0.2.2"),
+        p("GPL3 (c) Abbes, 2026"),
+        a("GitHub", href = "https://github.com/alexandreabbes/BsplineQuantReg", target = "_blank")
+      )
+    ),
+
+    mainPanel(
+      width = 9,
+
+      tabsetPanel(
+        tabPanel(
+          "Visualization",
+          br(),
+          fluidRow(
+
+            actionButton("add_knot_mode","Add knot",class = "btn-sm btn-primary",
+              style = "background-color:#FFDD00; color:#000000"),
+            actionButton("clear_manual_knots", "Clear \n manual knots", class = "btn-sm btn-danger"),
+
+            actionButton("remove_knot", "Remove selected knot", class = "btn-sm btn-warning")
+            ),
+
+
+          h5("Selected Knot:"), column(4 ,verbatimTextOutput("selected_knot_display"),
+          conditionalPanel(
+            condition = "output.selected_knot_display != 'No knot selected'")),
+
+
+          fluidRow(
+            column(9, plotlyOutput("spline_plot", height = "600px")),
+
+            column(
+              3,
+              h3("3. Constraints", class = "text-primary"),
+              radioButtons(
+                "constraint_mode",
+                "Mode:",
+                choices = c("Uniform" = "uniform", "Per region" = "region"),
+                selected = "uniform",
+                inline = TRUE
+              ),
+
+              conditionalPanel(
+                condition = "input.constraint_mode == 'uniform'",
+                radioButtons(
+                  "monot",
+                  "Monotonicity:",
+                  choices = c("x" = "0", "up" = "1", "down" = "-1"),
+                  selected = "0",
+                  inline = TRUE
+                ),
+                radioButtons(
+                  "conv",
+                  "Convexity:",
+                  choices = c("x" = "0", "U" = "1", "n" = "-1"),
+                  selected = "0",
+                  inline = TRUE
+                ),
+                conditionalPanel(
+                  condition = "input.degree >= 3",
+                  radioButtons(
+                    "der3",
+                    "Third Derivative:",
+                    choices = c("x" = "0", "+" = "1", "-" = "-1"),
+                    selected = "0",
+                    inline = TRUE
+                  )
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.constraint_mode == 'region'",
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "1. Click 'Select'"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "2. Select a region on the plot"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. X min/max fields are updated"),
+
+                fluidRow(column(
+                  6,
+                  actionButton(
+                    "start_selection",
+                    "Select",
+                    class = "btn-sm btn-warning",
+                    style = "width:100%;"
+                  )
+                ), column(
+                  6,
+                  actionButton(
+                    "clear_regions",
+                    "Cancel region",
+                    class = "btn-sm btn-danger",
+                    style = "width:100%;"
+                  )
+                )),
+                br(),
+
+                fluidRow(column(
+                  6, numericInput("region_xmin", "X min:", value = 0.3, step = 0.05)
+                ), column(
+                  6, numericInput("region_xmax", "X max:", value = 0.6, step = 0.05)
+                )),
+
+                radioButtons(
+                  "region_monot",
+                  "Monotonicity:",
+                  choices = c("x" = "0", "up" = "1", "down" = "-1"),
+                  selected = "0",
+                  inline = TRUE
+                ),
+                radioButtons(
+                  "region_conv",
+                  "Convexity:",
+                  choices = c("x" = "0", "U" = "1", "n" = "-1"),
+                  selected = "0",
+                  inline = TRUE
+                ),
+                conditionalPanel(
+                  condition = "input.degree >= 3",
+                  radioButtons(
+                    "region_der3",
+                    "Third Derivative:",
+                    choices = c("x" = "0", "+" = "1", "-" = "-1"),
+                    selected = "0",
+                    inline = TRUE
+                  )
+                ),
+
+
+                fluidRow(column(
+                  6,
+                  actionButton("add_region", "Add region", class = "btn-sm btn-primary", style = "width:100%;")
+                ), column(
+                  6,
+                  actionButton("update_region", "Update", class = "btn-sm btn-info", style = "width:100%;")
+                )),
+                br(),
+                div(id = "regions_list", style = "max-height: 120px; overflow-y: auto;")
+              ),
+
+              # ============ 4. EXECUTION ============
+
+              h3("4. Execution"),
+              h5("Color:"),
+              fluidRow(
+                column(
+                  6,
+                  colourpicker::colourInput("curve_color", NULL, value = "blue")
+                ),
+                column(6, actionButton("apply_color", "Apply", class = "btn-sm"))
+              ),
+
+              p("Curves:", textOutput("curve_count", inline = TRUE)),
+
+
+              fluidRow(column(4,actionButton("run", "Run", class = "btn-success btn-lg"),
+                br(),
+                actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")),
+                column(3,actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),br(),
+                actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger")
+              )))),
+
+          br(),
+
+          #MULTIPLICITY
+          h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => minimum regularity at knot is C^{d-m}. C^{-1}:discontinuous) ",
+
+             checkboxInput("consider_multiplicity_main","Consider Multiplicity", value=TRUE )),
+          h5("Warning: Degree=1 and any Multiplicity>1 cannot handle constraints"),
+          column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
+                 actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
+                 actionButton("reset_multiplicity", "Reset multiplicity", class = "btn-sm btn-info")
+
+          ),
+          # Information (unique)
+          fluidRow(
+            column(6, h5("Information"), verbatimTextOutput("fit_info")),
+            column(6, h5("List of knots"),
+              verbatimTextOutput("knots_compact", placeholder = TRUE),
+              h5("Coefficients on the Bspline Basis"),
+              verbatimTextOutput("coeff_list", placeholder = TRUE))
+
+          ),
+
+
+
+
+# ============ AFFICHAGE DES COEFFICIENTS ============
+fluidRow(
+  column(
+    12,
+    radioButtons(
+      "local",
+      "Local basis coefficients display:",
+      choices = c("Canonical (1, x, x²...)" = "FALSE",
+                  "Local ((x-a)^i) for each knot a" = "TRUE"),
+      selected = "TRUE",
+      inline = TRUE
+    ),
+    verbatimTextOutput("bspline_coeff", placeholder = TRUE)
+  )
+),
+
+
+
+# ============================================================
+# SECTION 3 : DÉRIVÉES SUCCESSIVES
+# ============================================================
+
+fluidRow(
+  column(12,
+         h4("Derivatives", class = "text-primary"),
+
+         # Boutons radio pour sélectionner les dérivées à afficher
+         radioButtons(
+           "deriv_display",
+           "Display derivatives:",
+           choices = c(
+             "None" = "none",
+             "1st derivative" = "1",
+             "1st & 2nd" = "2",
+             "1st, 2nd & 3rd" = "3"
+           ),
+           selected = "none",
+           inline = TRUE
+         )
+  ),
+uiOutput("derivatives_ui"))
+
+
+
+    ),#end tab visualisation
+
+# )#end tab derivatives
+#
+
+        tabPanel(
+          "Data",
+          br(),
+          fluidRow(
+            column(6, h4("Summary"), verbatimTextOutput("data_summary"))
+            #,
+            #column(6, h4("Knots"), verbatimTextOutput("knots_info"))
+          ),
+          br(),
+          DTOutput("data_table")
+        ),
+        tabPanel(
+          "Regions",
+          br(),
+          h4("Defined Regions"),
+          verbatimTextOutput("regions_info"),
+          br(),
+          fluidRow(column(
+            6, h5("Active regions"), uiOutput("regions_list_ui")
+          ), column(
+            6,
+            h5("Instructions"),
+            p("1. Mode 'Per region'"),
+            p("2. 'Select' a rectangle on the plot"),
+            p("3. Select constraints"),
+            p("4. 'Add region'")
+          ))
+        ),
+        tabPanel(
+          "R Code",
+          br(),
+          h4("R Code to reproduce the analysis:"),
+          verbatimTextOutput("r_code")
+        ),
+
+
+
+          tabPanel(
+              "Basis",
+              br(),
+              fluidRow(
+                column(
+                  3,
+
+
+
+                  hr(),
+                  h4("Derivative"),
+                  sliderInput("basis_derivative", "Derivative order:",
+                              min = 0, max = 4, value = 0, step = 1),
+                  hr(),
+                  h4("Display"),
+                  checkboxInput("basis_show_knots", "Show knots", value = TRUE),
+                  checkboxInput("basis_show_multiplicity", "Show multiplicity labels", value = TRUE),
+                  actionButton("basis_update", "Update Basis",
+                               class = "btn-primary btn-block"),
+                  checkboxInput("consider_multiplicity","Consider Multiplicity",value=TRUE),
+
+
+                  hr(),
+                  h4("Knot Multiplicities"),
+                  verbatimTextOutput("multiplicity_info", placeholder = TRUE),
+
+                  hr(),
+
+                ),
+                column(
+                  9,
+                  plotOutput("basis_plot", height = "600px", click = "basis_plot_click"),
+                  br(),
+                  h5("Basis Information"),
+                  verbatimTextOutput("basis_info", placeholder = TRUE)
+                )
+              )
+            ),
+        tabPanel("Console", br(), fluidRow(column(
+          12,
+          div(
+            style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;",
+            h4("Console Output", style = "margin: 0;"),
+            actionButton(
+              "clear_console",
+              "Clear Console",
+              icon = icon("eraser"),
+              class = "btn-sm btn-danger"
+            )
+          ),
+          div(
+            style = "background-color: #1e1e1e; color: #d4d4d4; padding: 15px;
+                 border-radius: 5px; font-family: 'Courier New', monospace;
+                 font-size: 13px; height: 400px; overflow-y: auto;
+                 white-space: pre-wrap; word-wrap: break-word;",
+            verbatimTextOutput("console_output")
+          )
+        )))
+
+,
+tabPanel('Demo',br(),
+         div(
+           id = "demo_area",
+           style = "display: none; margin-top: 10px;",
+           hr(),
+           h4("Demo Results:"),
+           div(
+             style = "overflow: auto; width: 100%; max-height: 1800px;",
+             plotOutput("demo_plot", height = 800)  # Hauteur par défaut, sera modifiée dynamiquement
+           ),
+           br(),
+           verbatimTextOutput("demo_output")
+         )
+)
+      )
+    )
+  )
+)
+
+# SERVER ------------------------------------------------------------------
+
+server <- function(input, output, session) {
+  #Theme selector
+  # Dans le server, ajoutez :
+  observeEvent(input$toggle_theme, {
+    # Basculer l'affichage de la zone de thème
+    toggle("theme_selector_area", anim = TRUE)
+  })
+
+  # ============ REACTIVE VALUES ============
+  values <- reactiveValues(
+    xtab = NULL,
+    ytab = NULL,
+    knot = NULL,
+    multiplicity=NULL,
+    auto_knot_count = 10,
+    auto_knot_list= c(),
+    manual_knot = c(),
+    extended=vector(),
+    adding_knot = FALSE,
+    fitted = NULL,
+    x_eval = NULL,
+    y_eval = NULL,
+    curve_lines = list(),
+    regions = list(),
+    data_name = "No data available",
+    region_id = 0,
+    selected_region_id = NULL,
+    selecting_region = FALSE,
+    derivatives = list(),
+    consider_multiplicity=TRUE
+  )
+
+
+  # ============ CONSOLE ============
+
+  console_messages <- reactiveVal("")
+
+  log_console <- function(msg) {
+    current <- console_messages()
+    console_messages(paste0(current, msg, "\n"))
+    cat(msg, "\n")  # Pour voir dans la console R aussi
+  }
+
+  # Observer pour vider la console
+  observeEvent(input$clear_console, {
+    console_messages("")
+  })
+
+  # Afficher la console
+  output$console_output <- renderText({
+    console_messages()
+  })
+
+  # ============ DATA GENERATION ============
+
+  observeEvent(input$test_data, {
+    withProgress(message = "Generating...", {
+      set.seed(42)
+      n <- 200
+      xmin <- input$data_xmin
+      xmax <- input$data_xmax
+      x <- as.vector(seq(xmin, xmax, length.out = n))
+      y <- as.vector(2 * x + 0.2 * sin(10 * pi * x) + 0.05 * rnorm(n))
+      values$xtab <- x
+      values$ytab <- y
+      values$data_name <- paste("Test [", xmin, ",", xmax, "]")
+      values$fitted <- NULL
+      values$curve_lines <- list()
+      values$regions <- list()
+      showNotification("Test data generated", type = "message")
+    })
+  })
+
+  observeEvent(input$temp_data, {
+    withProgress(message = "Loading...", {
+      temp_data <- c(
+        -0.32,
+        -0.32,
+        -0.40,
+        -0.39,
+        -0.65,
+        -0.43,
+        -0.40,
+        -0.52,
+        -0.30,
+        -0.12,-0.40,
+        -0.42,
+        -0.39,
+        -0.45,
+        -0.35,
+        -0.36,
+        -0.19,
+        -0.14,
+        -0.37,
+        -0.22,
+        0.00,
+        -0.08,
+        -0.24,
+        -0.36,
+        -0.49,
+        -0.27,
+        -0.19,
+        -0.43,
+        -0.29,
+        -0.30,-0.29,
+        -0.29,
+        -0.28,
+        -0.23,
+        -0.04,
+        -0.02,
+        -0.24,
+        -0.42,
+        -0.35,
+        -0.16,-0.17,
+        -0.09,
+        -0.13,
+        -0.16,
+        -0.14,
+        -0.14,
+        0.10,
+        -0.03,
+        0.03,
+        -0.18,-0.06,
+        0.04,
+        0.02,
+        -0.13,
+        0.03,
+        -0.06,
+        0.02,
+        0.13,
+        0.13,
+        -0.03,
+        0.15,
+        0.12,
+        0.10,
+        0.04,
+        0.11,
+        -0.04,
+        0.01,
+        0.13,
+        -0.01,
+        -0.06,-0.14,
+        -0.02,
+        0.04,
+        0.14,
+        -0.07,
+        -0.06,
+        -0.17,
+        0.10,
+        0.10,
+        0.05,-0.01,
+        0.08,
+        0.02,
+        0.02,
+        -0.26,
+        -0.16,
+        -0.09,
+        -0.02,
+        -0.12,
+        0.03,
+        0.04,
+        -0.11,
+        -0.07,
+        0.19,
+        -0.07,
+        -0.05,
+        -0.22,
+        0.16,
+        0.09,
+        0.14,
+        0.28,
+        0.39,
+        0.07,
+        0.29,
+        0.11,
+        0.11,
+        0.16,
+        0.32,
+        0.35,
+        0.25,
+        0.47,
+        0.41,
+        0.13
+      )
+      years <- 1880:1992
+      #x <- (years - 1880) / (1992 - 1880)
+      x<-years
+      y <- temp_data
+      values$xtab <- x
+      values$ytab <- y
+      values$data_name <- "Temperature (1880-1992)"
+      values$fitted <- NULL
+      values$curve_lines <- list()
+      values$regions <- list()
+      year_knots <- c(1880, 1889, 1900, 1910, 1930, 1940, 1965, 1992)
+      #knot <- (year_knots - 1880) / (1992 - 1880)
+      knot<-year_knots
+      values$manual_knot <- knot[2:7]
+
+      values$auto_knot_count <- 2
+      updateNumericInput(session,'auto_knot_count',value=2)
+#      values$knot<-sort(union(values$manual_knot,values$auto_knot))
+      values$knot_multiplicity<-c(input$degree,rep(1,6),input$degree)
+
+      showNotification("Temperature data loaded", type = "message")
+      updateNumericInput(session, "data_xmin", value = min(values$xtab))
+      updateNumericInput(session, "data_xmax", value = max(values$xtab))
+
+    })
+  })
+
+  observeEvent(input$generate_custom, {
+    tryCatch({
+      n <- input$n_points
+      xmin <- input$data_xmin
+      xmax <- input$data_xmax
+      x <- as.vector(seq(xmin, xmax, length.out = n))
+      func_str <- gsub("sin\\(", "sin(", input$custom_func)
+      func_str <- gsub("cos\\(", "cos(", func_str)
+      func_str <- gsub("pi", "pi", func_str)
+      func_str <- gsub("randn\\(", "rnorm(", func_str)
+      y <- eval(parse(text = func_str))
+      values$xtab <- x
+      values$ytab <- y
+      values$data_name <- "Custom function"
+      values$fitted <- NULL
+      values$curve_lines <- list()
+      values$regions <- list()
+      showNotification("Data generated", type = "message")
+    }, error = function(e) {
+      showNotification(paste("Error:", e$message), type = "error")
+    })
+  })
+
+    # ============ KNOTS ============
+
+
+
+  observeEvent(input$add_knot_mode, {
+    values$adding_knot <- !values$adding_knot
+    if (values$adding_knot) {
+      showNotification("Add knot mode: click on the plot", type = "message")
+      updateActionButton(session, "add_knot_mode", label = "Stop")
+    } else {
+      updateActionButton(session, "add_knot_mode", label = "Add knot")
+    }
+  })
+
+# manage adding knots
+  observeEvent( event_data("plotly_click", source = "plot"),
+               {
+    if (values$adding_knot) {
+      click <- event_data("plotly_click", source = "plot")
+
+      if (!is.null(click) && !is.null(values$xtab)) {
+        x <- click$x
+        if (!any(abs(values$knot - x) < 1e-6))
+          {
+            #old values
+            tn<-values$knot
+            ln=length(values$knot)
+
+            idx=length(tn[tn<x])+1 #id the added knot
+            #update multiplicity: add a new one
+
+            if (idx==1) {# special case adding new  first knot
+              if (!is.null(values$knot_multiplicity))
+                  {values$knot_multiplicity[1]<-1  # shift first multiplicity to 1
+              values$knot_multiplicity<-c(input$degree+1,values$knot_multiplicity)
+                            }
+            else values$knot_multiplicity<-input$degree+1 # if only 1 knot
+            }
+
+            else if (idx==ln+1){ #if last after knot
+              if (!is.null(values$knot_multiplicity))
+                  {values$knot_multiplicity[ln]<-1 # shift last multiplicity to 1
+                  values$knot_multiplicity<-c(values$knot_multiplicity,input$degree+1)}
+                  else values$knot_multiplicity<-input$degree+1
+            }
+            else # case middle of the list
+              values$knot_multiplicity<-c(values$knot_multiplicity[1:(idx-1)],1,values$knot_multiplicity[idx:ln])
+
+            values$manual_knot<-sort(c(values$manual_knot,x))
+            values$knot <- sort(c(values$auto_knot_list,values$manual_knot))
+
+            showNotification(paste("New knot N",idx,"added at x =", round(x, 3)), type = "message")
+            #update multiplicities at end if necessary
+        }
+         else {
+            showNotification("This knot already exists", type = "warning")
+          }
+
+      }
+    }}
+
+  )
+
+  observeEvent(input$remove_knot,
+               {
+               idx <- selected_knot()
+               if (is.null(idx) || is.na(idx) ) {showNotification("Select a knot first", type="warning")
+                 return()}
+
+                 if (idx==1 || idx==length(values$knot))
+                 {showNotification("You removed one end knot", type="warning")
+                  }
+                 values$knot<-values$knot[-idx]
+               values$knot_multiplicity<-values$knot_multiplicity[-idx]
+               #update ends multiplicities
+              if (!is.null(values$knot)){
+               values$knot_multiplicity[1]<-input$degree+1
+               values$knot_multiplicity[length(values$knot) ] <-input$degree+1
+              }
+
+               })
+
+observeEvent(input$clear_manual_knots, {
+    if (is.null(values$manual_knot)){
+      showNotification("No manual knot ", type = "warning")
+      return()}
+    else{
+
+    idm<-c()
+    index=1:length(values$knot)
+    for (k in (values$manual_knot)){
+     idm<-c(idm,index[k==values$knot])}
+    #remove values of index idm:
+
+     values$knot_multiplicity<-values$knot_multiplicity[-idm]
+
+     values$manual_knot <- c()
+     values$knot<-values$auto_knot_list
+    showNotification("manual knots reset", type = "message")
+  }}
+  )
+
+  # update the knot list on particular events
+observeEvent(c(input$auto_knot_count, input$generate_custom),  {
+    req(values$xtab)
+    req(input$auto_knot_count >= 2)
+
+    # Ne pas écraser les nœuds manuels
+    #if (length(values$manual_knot) > 0) return()
+
+    kn <- max(input$auto_knot_count, 2) - 1
+    auto_knot_list<-as.numeric(quantile(values$xtab, probs = seq(0, 1, length.out = kn + 1)))
+
+    values$knot<-sort(union(auto_knot_list,values$manual_knot))
+    values$auto_knot_list<-auto_knot_list #export
+
+    degree <- input$degree
+    manual<-values$manual_knot
+
+    mult <- rep(1, length(values$knot))
+    mult[1] <- degree + 1
+    mult[length(mult)] <- degree + 1
+
+    values$knot_multiplicity<-mult
+    values$knot_extended <- build_knot_sequence(values$knot, mult)
+  },
+  ignoreNULL = TRUE, ignoreInit = FALSE)
+
+
+
+  #### Affiche des noeuds
+  output$knots_compact <- renderPrint({
+    if (!is.null(values$knot) && length(values$knot) > 0) {
+      k <- round(values$knot, 3)
+      if (length(k) <= 15) {
+        cat(paste(k, collapse = ", "))
+      } else {
+        cat(paste(c(head(k, 4), "...", tail(k, 4)), collapse = ", "))
+      }
+    } else {
+      cat("(none)")
+    }
+  })
+
+  # ============ REGION SELECTION MANAGEMENT ============
+  # =====================================================
+
+  observeEvent(input$start_selection, {
+    values$selecting_region <- !values$selecting_region
+    if (values$selecting_region) {
+      showNotification("Select a region on the plot (rectangle)", type = "message")
+      updateActionButton(session, "start_selection", label = "Stop")
+    } else {
+      updateActionButton(session, "start_selection", label = "Select")
+    }
+  })
+
+  observeEvent(event_data("plotly_selected", source = "plot"), {
+    if (input$constraint_mode == "region" && values$selecting_region) {
+      selected <- event_data("plotly_selected", source = "plot")
+      if (!is.null(selected) && nrow(selected) > 0) {
+        x_vals <- selected$x
+        if (length(x_vals) >= 2) {
+          xmin <- min(x_vals, na.rm = TRUE)
+          xmax <- max(x_vals, na.rm = TRUE)
+          updateNumericInput(session, "region_xmin", value = round(xmin, 3))
+          updateNumericInput(session, "region_xmax", value = round(xmax, 3))
+          values$selecting_region <- FALSE
+          updateActionButton(session, "start_selection", label = "Select")
+          showNotification(paste(
+            "Region selected: [",
+            round(xmin, 3),
+            ", ",
+            round(xmax, 3),
+            "]"
+          ),
+          type = "message")
+        }
+      }
+    }
+  })
+
+
+  observeEvent(input$add_region, {
+    req(values$xtab, values$knot)
+    xmin <- input$region_xmin
+    xmax <- input$region_xmax
+    if (xmin >= xmax) {
+      showNotification("X min < X max", type = "warning")
+      return()
+    }
+    values$region_id <- values$region_id + 1
+    region <- list(
+      id = values$region_id,
+      xmin = xmin,
+      xmax = xmax,
+      monot = as.numeric(input$region_monot),
+      conv = as.numeric(input$region_conv),
+      der3 = as.numeric(input$region_der3)
+    )
+    values$regions <- c(values$regions, list(region))
+    values$selected_region_id <- NULL
+    showNotification(paste("Region added: [", round(xmin, 3), ", ", round(xmax, 3), "]"), type = "message")
+  })
+
+  # observeEvent(input$update_region, {
+  #   if (!is.null(values$selected_region_id)) {
+  #     idx <- which(sapply(values$regions, function(r)
+  #       r$id == values$selected_region_id))
+  #     if (length(idx) > 0) {
+  #       values$regions[[idx]]$xmin <- input$region_xmin
+  #       values$regions[[idx]]$xmax <- input$region_xmax
+  #       values$regions[[idx]]$monot <- as.numeric(input$region_monot)
+  #       values$regions[[idx]]$conv <- as.numeric(input$region_conv)
+  #       values$regions[[idx]]$der3 <- as.numeric(input$region_der3)
+  #       showNotification("Region updated", type = "message")
+  #     }
+  #   } else {
+  #     showNotification("Select a region first", type = "warning")
+  #   }
+  # })
+
+  observeEvent(input$clear_regions, {
+    values$regions <- c()
+    values$region_id <- 0
+    values$selected_region_id <- NULL
+    showNotification("All regions cleared", type = "message")
+  })
+
+
+  observeEvent(input$delete_region, {
+    id <- as.numeric(input$delete_region)
+    if (is.na(id)) {
+      showNotification("Invalid ID", type = "warning")
+      return()
+    }
+    values$regions <- values$regions[!sapply(values$regions, function(r)
+      r$id == id)]
+    if (!is.null(values$selected_region_id) &&
+        values$selected_region_id == id) {
+      values$selected_region_id <- NULL
+    }
+    showNotification(paste("Region", id, "deleted"), type = "message")
+  }, ignoreNULL = TRUE)
+
+
+  # ============ CSV IMPORT ============
+
+  observeEvent(input$load_csv, {
+    file_path <- file.choose()
+    if (is.na(file_path))
+      return()
+
+    tryCatch({
+      df <- read.csv(file_path, header = TRUE)
+
+      if (ncol(df) < 2) {
+        showNotification("File must have at least 2 columns!", type = "error")
+        return()
+      }
+
+      x_col <- df[, 1]
+      y_col <- df[, 2]
+
+      valid <- !is.na(x_col) & !is.na(y_col)
+      x_col <- x_col[valid]
+      y_col <- y_col[valid]
+
+      if (length(x_col) < 3) {
+        showNotification("Not enough data (minimum 3 points)", type = "error")
+        return()
+      }
+
+      values$xtab <- as.vector(x_col)
+      values$ytab <- as.vector(y_col)
+      values$data_name <- basename(file_path)
+      values$fitted <- NULL
+      values$curve_lines <- list()
+      values$regions <- list()
+
+      updateNumericInput(session, "data_xmin", value = min(values$xtab))
+      updateNumericInput(session, "data_xmax", value = max(values$xtab))
+
+      values$manual_knot <- vector()
+      kn <- max(input$auto_knot_count, 2) - 1
+      values$auto_knot_list <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
+
+      showNotification(paste(
+        "File loaded:",
+        basename(file_path),
+        "-",
+        length(x_col),
+        "points"
+      ),
+      type = "success")
+
+    }, error = function(e) {
+      showNotification(paste("Read error:", e$message), type = "error")
+    })
+  })
+
+  # # ============ EXCEL IMPORT ============
+  #
+  # observeEvent(input$load_excel, {
+  #   if (!requireNamespace("readxl", quietly = TRUE)) {
+  #     showNotification(
+  #       "Install 'readxl' to read Excel files: install.packages('readxl')",
+  #       type = "error",
+  #       duration = 10
+  #     )
+  #     return()
+  #   }
+  #
+  #   file_path <- file.choose()
+  #   if (is.na(file_path))
+  #     return()
+  #   tryCatch({
+  #     df <- readxl::read_excel(file_path)
+  #     df <- as.data.frame(df)
+  #
+  #     if (ncol(df) < 2) {
+  #       showNotification("File must have at least 2 columns!", type = "error")
+  #       return()
+  #     }
+  #
+  #     x_col <- df[, 1]
+  #     y_col <- df[, 2]
+  #
+  #     valid <- !is.na(x_col) & !is.na(y_col)
+  #     x_col <- x_col[valid]
+  #     y_col <- y_col[valid]
+  #
+  #     if (length(x_col) < 3) {
+  #       showNotification("Not enough data (minimum 3 points)", type = "error")
+  #       return()
+  #     }
+  #
+  #     values$xtab <- as.vector(x_col)
+  #     values$ytab <- as.vector(y_col)
+  #     values$data_name <- basename(file_path)
+  #     values$fitted <- NULL
+  #     values$curve_lines <- list()
+  #     values$regions <- list()
+  #
+  #     updateNumericInput(session, "data_xmin", value = min(values$xtab))
+  #     updateNumericInput(session, "data_xmax", value = max(values$xtab))
+  #
+  #     values$manual_knot <- vector()
+  #     kn <- max(input$auto_knot_count, 2) - 1
+  #     values$knot <- as.numeric(quantile(values$xtab, probs = (0:(kn)) / (kn)))
+  #
+  #     showNotification(paste(
+  #       "File loaded:",
+  #       basename(file_path),
+  #       "-",
+  #       length(x_col),
+  #       "points"
+  #     ),
+  #     type = "success")
+  #
+  #   }, error = function(e) {
+  #     showNotification(paste("Read error:", e$message), type = "error")
+  #   } )} )
+
+
+  # ============ REGRESSION ============
+
+  observeEvent(input$run, {
+    req(values$xtab, values$ytab, values$knot)
+
+    if (length(values$knot) < 2) {
+      showNotification("Need at least 2 knots!", type = "error")
+      return()
+    }
+
+    if (length(values$xtab) != length(values$ytab)) {
+      showNotification("x and y have different lengths!", type = "error")
+      return()
+    }
+
+    withProgress(message = "Regression...", {
+      constraints <- build_constraints()
+      if (is.null(constraints)) return()
+
+      log_console("=== Starting Regression ===")
+      log_console(paste("Degree:", input$degree))
+      log_console(paste("Solver:", input$solver))
+      log_console(paste("Verbose:", input$verbose))
+
+      # Vérifier la version de BsplineQuantReg
+      version <- packageVersion("BsplineQuantReg")
+      #Extended knot sequence with interior multiplicities (regularity control)
+      #if (input$degree==1 && input$consider_multiplicity && any(constraints$monot!=0)){
+      #  showNotification("Constraints do not work now with multplie knots for degree 1", type="warning" )
+      #  }
+      if (input$consider_multiplicity)
+        {
+        mult_knot<-build_knot_sequence(
+        values$knot,
+        values$knot_multiplicity)
+        lm<-length(mult_knot)
+        knot<-mult_knot[(input$degree+1):(lm-input$degree)]}
+      else{
+        knot<-as.vector(values$knot)
+      }
+
+      # Paramètres communs
+      args <- list(
+        as.vector(values$xtab),
+        as.vector(values$ytab),
+        knot=knot, #
+        tau = input$tau,
+        degree = as.numeric(input$degree),
+        monot = constraints$monot,
+        convcons = constraints$conv,
+        der3cons = constraints$der3,
+        solver = as.logical(input$solver),
+        verbose = input$verbose,
+        callable = TRUE
+      )
+      if (input$verbose) log_console(print(args$knot ))
+
+      # Ajouter le paramètre type_reg si la version est >= 0.2.3
+      if (version >= "0.2.3") {
+        args$type_reg <- input$type_reg
+      }
+
+      console_text <- character()
+      #problem in special case constraints with multiplicities and degree==1
+      tn=length(knot)
+      exept=(input$degree==1 && input$consider_multiplicity) && (any(constraints$monot!=0) && (any(values$knot_multiplicity[2:(tn-1)]>1)))
+if (exept) {
+showNotification("Linear regression does not work in case of constraints with multiplicities\n Unckeck multiplicities or remove constrnaits",type='warning')
+return()}
+
+      # Rediriger stdout
+      sink(tempfile())
+
+      # Capturer les messages
+      withCallingHandlers({
+        output <- capture.output({
+          fitted <- do.call(quantile_spline, args)
+        })
+
+
+
+
+      }, message = function(m) {
+        console_text <<- c(console_text, m$message)
+      })
+
+      # Restaurer stdout
+      sink()
+
+      # Ajouter la sortie standard
+      console_all <- output
+
+      log_console(console_all)
+
+
+      # Traiter le résultat
+      if (!is.null(fitted)) {
+        x_eval <- seq(min(values$xtab), max(values$xtab), length.out = 300)
+        y_eval <- fitted(x_eval)
+        values$fitted <- fitted
+        values$x_eval <- x_eval
+        values$y_eval <- y_eval
+        color <- input$curve_color
+        values$curve_lines <- c(values$curve_lines,list(list(
+          x = x_eval,
+          y = y_eval,
+          color = color
+        )))
+        showNotification("Regression successful!", type = "message")
+      } else {
+        log_console("=== Regression failed ===", "error")
+      }
+    })
+      clean_ansi <- function(text) {
+        text <- gsub("gG3;", "", text)
+        text <- gsub("G3;", "", text)
+        text <- trimws(text)
+        return(text)
+      }
+
+      #log_console(clean_ansi(console_text))
+
+      for (line in console_text) {
+        if (nchar(line) > 0) {
+          line = clean_ansi(line)
+          log_console(paste(line))
+        }
+      }
+
+
+      log_console(paste("BsplineQuantReg version:", packageVersion("BsplineQuantReg")))
+      if (!is.null(fitted)) {
+
+
+      }
+    })
+
+
+  # ============ VISUALIZATION ============
+  output$spline_plot <- renderPlotly({
+    req(values$xtab, values$ytab)
+
+    p <- plot_ly(source = "plot")
+
+    # Data
+    p <- p %>% add_trace(
+      x = values$xtab,
+      y = values$ytab,
+      type = "scatter",
+      mode = "markers",
+      marker = list(color = "gray", size = 6, opacity = 0.5),
+      name = "Data"
+    )
+    # Dans le plot de visualisation, afficher les multiplicités
+    if (!is.null(values$knot)) {
+      y_range <- range(values$ytab, na.rm = TRUE)
+      y_pos <- y_range[2] - 0.1 * diff(y_range)
+      l=length(values$knot)
+      for (i in 1:l) {
+        mult <- values$knot_multiplicity[i]
+
+        # Couleur selon multiplicité
+        color <- switch(as.character(mult),
+                        "1" = "blue",
+                        "2" = "orange",
+                        "3" = "red",
+                        "4" = "darkred",
+                        "gray")
+
+        # Symbole selon multiplicité
+        symbol <- switch(as.character(mult),
+                         "1" = "circle",
+                         "2" = "square",
+                         "3" = "diamond",
+                         "4" = "cross",
+                         "circle")
+
+        p <- p %>% add_trace(
+          x = values$knot[i],
+          y = y_pos,
+          type = "scatter",
+          mode = "markers+text",
+          marker = list(color = color, symbol = symbol, size = 12),
+          text = paste0("m=", mult),
+          textposition = "top center",
+          textfont = list(size = 8, color = "black"),
+          name = "Knots",
+          showlegend = FALSE
+        )
+      }
+    }
+    # Knots
+    if (!is.null(values$knot) && length(values$knot) > 0) {
+      y_range <- range(values$ytab, na.rm = TRUE)
+      y_pos <- y_range[2] - 0.1 * diff(y_range)
+
+      p <- p %>% add_trace(
+        x = values$knot,
+        y = rep(y_pos, length(values$knot)),
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "red", symbol = "triangle-down", size = 10),
+        name = "Knots"
+      )
+
+      # Ajouter le marqueur du nœud sélectionné (utiliser selected_knot())
+      idx <- selected_knot()
+      if (!is.null(idx) && idx >= 1 && idx <= length(values$knot)) {
+        p <- p %>% add_trace(
+          x = values$knot[idx],
+          y = y_pos,
+          type = "scatter",
+          mode = "markers",
+          marker = list(color = "green", symbol = "circle", size = 20, opacity = 0.7),
+          name = "Selected Knot"
+        )
+      }
+
+    }
+
+    # Regions
+    if (input$constraint_mode == "region" && length(values$regions) > 0) {
+      y_range <- range(values$ytab, na.rm = TRUE)
+      for (region in values$regions) {
+        is_selected <- !is.null(values$selected_region_id) && values$selected_region_id == region$id
+        border_color <- if (is_selected) "#ff0000" else "rgba(255, 152, 0, 0.8)"
+        fill_color <- if (is_selected) "rgba(255, 0, 0, 0.15)" else "rgba(255, 152, 0, 0.15)"
+        p <- p %>% add_trace(
+          x = c(region$xmin, region$xmax, region$xmax, region$xmin, region$xmin),
+          y = c(y_range[1], y_range[1], y_range[2], y_range[2], y_range[1]),
+          type = "scatter",
+          mode = "lines",
+          fill = "toself",
+          fillcolor = fill_color,
+          line = list(color = border_color, width = ifelse(is_selected, 3, 1)),
+          name = paste0("Region ", region$id),
+          hoverinfo = "text",
+          text = paste0(
+            "Region ", region$id, "\n",
+            "[", round(region$xmin, 3), ", ", round(region$xmax, 3), "]\n",
+            "M: ", get_sym(region$monot, c("down", "x", "up")), "\n",
+            "C: ", get_sym(region$conv, c("n", "x", "U")), "\n",
+            "D3: ", get_sym(region$der3, c("-", "x", "+"))
+          )
+        )
+      }
+    }
+
+    # Curves
+    for (curve in values$curve_lines) {
+      if (!is.null(curve$x) && !is.null(curve$y)) {
+        p <- p %>% add_trace(
+          x = curve$x,
+          y = curve$y,
+          type = "scatter",
+          mode = "lines",
+          line = list(color = curve$color, width = 2),
+          name = paste0("tau=", input$tau)
+        )
+      }
+    }
+
+    # Layout
+    p <- p %>% layout(
+      annotations = list(
+        x = 0.02,
+        y = 0.98,
+        text = paste("Knots:", length(values$knot %||% numeric(0))),
+        xref = "paper",
+        yref = "paper",
+        showarrow = FALSE,
+        font = list(size = 12, color = "red")
+      ),
+      xaxis = list(title = "x"),
+      yaxis = list(title = "y"),
+      hovermode = "closest",
+      legend = list(orientation = "h", y = -0.1),
+      dragmode = if (values$selecting_region && input$constraint_mode == "region") "select" else "zoom"
+    )
+
+    p <- p %>% config(
+      scrollZoom = TRUE,
+      displaylogo = FALSE,
+      modeBarButtonsToRemove = c("sendDataToCloud", "resetViews")
+    )
+
+    #p
+  })
+  # ============ KNOT SELECTION FROM VISUALIZATION ============
+
+  # Reactive value pour le nœud sélectionné
+  selected_knot <- reactiveVal(NULL)
+
+  # Observer les clics sur le plot principal
+  observeEvent(event_data("plotly_click", source = "plot"), {
+    click <- event_data("plotly_click", source = "plot")
+
+    if (!is.null(click) && !is.null(values$knot)) {
+      x <- click$x
+
+      # Trouver le nœud le plus proche
+      knot <- values$knot
+      distances <- abs(knot - x)
+      min_dist <- min(distances)
+
+      # Seuil de sélection (2% de l'intervalle des nœuds)
+      threshold <- 0.02 * diff(range(knot))
+
+      if (min_dist < threshold) {
+        idx <- which.min(distances)
+        selected_knot(idx)
+        showNotification(paste("Knot selected:", round(knot[idx], 4)),
+                         type = "message", duration = 2)
+      } else {
+        # Désélectionner si on clique ailleurs
+        selected_knot(NULL)
+      }
+    }
+  })
+  # Afficher le nœud sélectionné
+  output$selected_knot_display <- renderPrint({
+    idx <- selected_knot()
+    if (!is.null(idx) && !is.null(values$knot)) {
+      cat("  Index:", idx,".")
+      cat("  Value:", round(values$knot[idx], 4))
+    } else {
+      cat("No knot selected\n")
+      cat("Click on a knot in the plot to select it.")
+    }
+  })
+    # ============ REGION SELECTION BY CLICK ============
+
+    observeEvent(event_data("plotly_click", source = "plot"), {
+      if (!values$selecting_region && input$constraint_mode == "region") {
+        click <- event_data("plotly_click", source = "plot")
+        if (!is.null(click)) {
+          x <- click$x
+          for (region in values$regions) {
+            if (x >= region$xmin && x <= region$xmax) {
+              values$selected_region_id <- region$id
+              update_region_fields(region$xmin, region$xmax)
+              updateRadioButtons(session, "region_monot", selected = as.character(region$monot))
+              updateRadioButtons(session, "region_conv", selected = as.character(region$conv))
+              updateRadioButtons(session, "region_der3", selected = as.character(region$der3))
+              showNotification(paste("Region", region$id, "selected"), type = "message")
+              break
+            }
+          }
+        }
+      }
+
+    })
+    # ============ OUTPUTS ============
+    # = INFO = COEFF
+    output$coeff_list<- renderPrint( {
+      tryCatch({
+        if (is.null(values$fitted)) {
+          return('No regression')
+        } else
+        {
+          # Extraire les informations
+            list_coeff <- (get_parameters(values$fitted))$coeff
+            status <- (get_parameters(values$fitted))$result$status
+            cat("Status of convergence: ",status,"\n")
+            cat("Number (dimension of the basis): ",
+                length(list_coeff %||% numeric(0)), "\n")
+            cat("Values: \n")
+            cat(list_coeff)
+            }},
+        error = function(e) {
+          cat("Error displaying fit info:", e$message)
+        })
+    })
+
+   #===INFO==GENERAL
+    output$fit_info <- renderPrint(
+        {tryCatch({
+        cat("Solver: ",input$solver,"\n")
+        cat("Degree:", if (!is.na(input$degree))
+            input$degree
+            else
+              "unknown", "   ")
+        cat("Tau:", input$tau, "   ")
+        cat("Knots:", if (!is.na(input$degree)){length(values$knot)}
+              else{"Unknown" }, "\n")
+            }
+
+      , error = function(e) {
+        cat("Error displaying info:", e$message)}
+        )
+      constraints <- build_constraints()
+      cat("Constraints:\n",
+        "Monotone",paste(c(constraints$monot), collapse = ",") ,'\n',
+          "Convex",paste(c(constraints$conv),collapse = ",") , "\n",
+          "Third derivative",paste( c(constraints$der3),collapse = ",") , "\n"
+    )
+    } )
+    output$knot_list_display <- renderPrint({
+      if (is.null(values$knot)) {
+        cat("No knots defined")
+      } else {
+        cat("All knots:\n")
+        for (i in seq_along(values$knot)) {
+          cat(sprintf("  [%d] %.4f\n", i, values$knot[i]))
+        }
+      }
+    })
+  # = Curve cournt =
+  output$curve_count <- renderText({
+    length(values$curve_lines)
+  })
+
+  # regions
+  output$regions_list_ui <- renderUI({
+    if (length(values$regions) == 0) {
+      return(p("No regions", style = "color: #999;"))
+    }
+    tags$div(lapply(values$regions, function(r) {
+      is_selected <- !is.null(values$selected_region_id) &&
+        values$selected_region_id == r$id
+      tags$div(
+        class = "region-box",
+        style = if (is_selected)
+          "border: 3px solid #ff0000; background-color: rgba(255,0,0,0.1);",
+        tags$div(
+          style = "display: flex; justify-content: space-between;",
+          tags$span(
+            style = "font-weight: bold;",
+            paste0(
+              "Region ",
+              r$id,
+              " [",
+              round(r$xmin, 3),
+              ", ",
+              round(r$xmax, 3),
+              "]"
+            )
+          ),
+          actionButton(
+            paste0("del_", r$id),
+            "x",
+            class = "btn-sm btn-danger",
+            style = "padding: 0px 6px;",
+            onclick = paste0("Shiny.setInputValue('delete_region', ", r$id, ")")
+          )
+        ),
+        tags$div(
+          style = "font-size: 12px; color: #555;",
+          paste0(
+            "M: ",
+            get_sym(r$monot, c("down", "x", "up")),
+            " | C: ",
+            get_sym(r$conv, c("n", "x", "U")),
+            " | D3: ",
+            get_sym(r$der3, c("-", "x", "+"))
+          )
+        )
+      )
+    }))
+  })
+
+  #============= bspline coefficients ======================
+  output$bspline_coeff<-renderPrint(
+    {if (is.null(values$fitted)){return("No regression")}
+      else{
+        return(
+          show_pp(values$fitted,local=input$local,verbose=input$verbose)
+        )
+
+      }
+    }
+  )
+
+  # ============================================================================
+  # UI POUR LES DÉRIVÉES
+  # ============================================================================
+
+  output$derivatives_ui <- renderUI({
+    req(values$fitted)
+
+    selected <- input$deriv_display
+    if (selected == "none") {
+      return(NULL)
+    }
+
+    n_deriv <- as.numeric(selected)
+    plot_list <- list()
+
+    for (d in 1:n_deriv) {
+      # Nom de la dérivée
+      deriv_names <- c("1st derivative", "2nd derivative", "3rd derivative")
+
+      # Créer la ligne avec le plot et les coefficients
+      plot_list[[d]] <- fluidRow(
+        column(6,
+               plotlyOutput(paste0("deriv_plot_", d), height = "250px")
+        ),
+        column(6,
+               h5(paste("Coefficients of", deriv_names[d])),
+               verbatimTextOutput(paste0("deriv_coeff_", d))
+        )
+      )
+
+      # Ajouter un séparateur
+      if (d < n_deriv) {
+        plot_list[[d]] <- tagList(plot_list[[d]], hr())
+      }
+    }
+
+    do.call(tagList, plot_list)
+  })
+
+  # ============================================================================
+  # RENDU DES PLOTS DE DÉRIVÉES
+  # ============================================================================
+
+  observe({
+    selected <- input$deriv_display
+    if (selected == "none") return()
+
+    n_deriv <- as.numeric(selected)
+
+    for (d in 1:n_deriv) {
+      local({
+        der <- d
+        output_name <- paste0("deriv_plot_", der)
+
+        output[[output_name]] <- renderPlotly({
+          req(values$fitted)
+          req(values$xtab)
+
+          # Calculer la dérivée
+          deriv_spline <- Bspline_deriv(values$fitted, der = der)
+
+          x_vals <- seq(min(values$xtab, na.rm = TRUE),
+                        max(values$xtab, na.rm = TRUE),
+                        length.out = 300)
+
+          # Évaluer la dérivée
+          if (inherits(deriv_spline, "callable_spline") || inherits(deriv_spline, "function")) {
+            y_vals <- deriv_spline(x_vals)
+          } else {
+            y_vals <- spline_eval(deriv_spline, x_vals)
+          }
+
+          colors <- c("blue", "darkgreen", "purple")
+          deriv_names <- c("1st derivative", "2nd derivative", "3rd derivative")
+
+          plot_ly(
+            x = x_vals,
+            y = y_vals,
+            type = "scatter",
+            mode = "lines",
+            line = list(color = colors[der], width = 2),
+            name = deriv_names[der]
+          ) %>%
+            layout(
+              title = deriv_names[der],
+              xaxis = list(title = "x"),
+              yaxis = list(title = paste0("f^(", der, ")(x)")),
+              hovermode = "closest"
+            )
+        })
+      })
+    }
+  })
+
+  # ============================================================================
+  # AFFICHAGE DES COEFFICIENTS DES DÉRIVÉES
+  # ============================================================================
+
+  observe({
+    selected <- input$deriv_display
+    if (selected == "none") return()
+
+    n_deriv <- as.numeric(selected)
+
+    for (d in 1:n_deriv) {
+      local({
+        der <- d
+        output_name <- paste0("deriv_coeff_", der)
+
+        output[[output_name]] <- renderPrint({
+          req(values$fitted)
+
+          # Calculer la dérivée
+          deriv_spline <- Bspline_deriv(values$fitted, der = der)
+
+          # Convertir en PP
+          deriv_pp <- Bsplinetopp(deriv_spline, callable = FALSE)
+
+          local_display <- if (is.null(input$local)) TRUE else as.logical(input$local)
+
+          coeff_matrix <- deriv_pp$coeff
+          knot <- deriv_pp$knot
+
+          cat("Derivative order:", der, "\n")
+          cat("Degree:", deriv_pp$degree, "\n")
+          cat("Number of intervals:", length(knot) - 1, "\n\n")
+
+          if (is.matrix(coeff_matrix)) {
+            cat("Polynomial coefficients on each interval:\n\n")
+            for (i in 1:nrow(coeff_matrix)) {
+              cat(sprintf("[%.4f, %.4f]: ", knot[i], knot[i+1]))
+              poly_str <- show_poly(coeff_matrix[i, ],
+                                    a = knot[i],
+                                    b = if (local_display) knot[i] else 0,
+                                    digits = 4)
+              cat(poly_str, "\n")
+            }
+          } else {
+            cat("Polynomial coefficients:\n")
+            poly_str <- show_poly(coeff_matrix,
+                                  a = knot[1],
+                                  b = if (local_display) knot[1] else 0,
+                                  digits = 4)
+            cat(poly_str, "\n")
+          }
+        })
+      })
+    }
+  })
+
+####============DATA
+  output$data_summary <- renderPrint({
+    if (is.null(values$xtab)) {
+      cat("No data")
+    } else {
+      cat("Source:", values$data_name, "\n")
+      cat("Points:", length(values$xtab), "\n")
+      cat("x: [", min(values$xtab), ",", max(values$xtab), "]\n")
+      cat("y: [", min(values$ytab), ",", max(values$ytab), "]")
+    }
+  })
+
+  output$knots_info <- renderPrint({
+    if (is.null(values$knot)) {
+      cat("No knots")
+    } else {
+      cat("Knots:", length(values$knot), "\n")
+      print(round(values$knot, 4))
+    }
+  })
+
+  output$data_table <- renderDT({
+    if (is.null(values$xtab))
+      return(NULL)
+    datatable(data.frame(
+      x = round(values$xtab, 4),
+      y = round(values$ytab, 4)
+    ),
+    options = list(pageLength = 10, scrollX = TRUE))
+  })
+
+  output$regions_info <- renderPrint({
+    if (length(values$regions) == 0) {
+      cat("No regions")
+    } else {
+      for (r in values$regions) {
+        cat(
+          r$id,
+          ": [",
+          round(r$xmin, 3),
+          ", ",
+          round(r$xmax, 3),
+          "]  ",
+          "M=",
+          get_sym(r$monot, c("down", "x", "up")),
+          " C=",
+          get_sym(r$conv, c("n", "x", "U")),
+          " D3=",
+          get_sym(r$der3, c("-", "x", "+")),
+          "\n",
+          sep = ""
+        )
+      }
+    }
+  })
+
+  # ============ R CODE ============
+
+  output$r_code <- renderText({
+    if (is.null(values$fitted)) {
+      return("# Run a regression first")
+    }
+    constraints <- build_constraints()
+    if (is.null(constraints)) {
+      return("# Error: constraints not defined")
+    }
+    ###########adding derivatives##############
+    n_deriv<-input$deriv_display
+    deriv_plot=""
+    deriv_code=""
+    if (n_deriv != "none") {
+      deriv_plot<-paste("#### Add plots of the derivatives #### \n")
+
+      colors <- c("blue", "darkgreen", "purple")
+      n_deriv <- as.numeric(n_deriv)
+
+      for (d in 1:n_deriv) {
+        deriv_code <- paste0(deriv_code, "\n# ", " derivative",d,"\n")
+        deriv_code <- paste0( deriv_code, "deriv_", d, " <- Bspline_deriv(fitted, der = ", d, ")\n" )
+
+        # Ajouter l'évaluation
+        deriv_code <- paste0(deriv_code, "deriv_", d, "_eval <- deriv_", d, "(x_eval)\n")
+
+        deriv_plot <- paste0(deriv_plot, "plot(x_eval, deriv_",d, "_eval," , "pch = 16, cex = 0.5, col = 'gray',\n",
+                             "     main = 'Spline  derivatives", d,"')" , "\n" )
+
+        deriv_plot <- paste0(deriv_plot,
+                             "lines(x_eval, deriv_", d, "_eval, col = '",
+                             colors[d], "', lwd = 1.5, lty = ", d+1, ")\n")
+      }
+
+
+
+    }
+
+    paste0(
+      "library(BsplineQuantReg)\n\n",
+      "x <- c(",
+      paste(round(values$xtab, 4), collapse = ", "),
+      ")\n",
+      "y <- c(",
+      paste(round(values$ytab, 4), collapse = ", "),
+      ")\n",
+      "knot <- c(",
+      paste(round(values$knot, 4), collapse = ", "),
+      ")\n\n",
+      "fitted <- quantile_spline(x, y, knot,\n",
+      "                       tau = ",
+      input$tau,
+      ",\n",
+      "                       degree = ",
+      input$degree,
+      ",\n",
+      "                       monot = c(",
+      paste(constraints$monot, collapse = ", "),
+      "),\n",
+      "                       convcons = c(",
+      paste(constraints$conv, collapse = ", "),
+      "),\n",
+      "                       der3cons = c(",
+      paste(constraints$der3, collapse = ", "),
+      "),\n",
+      "                       solver = '",
+      input$solver,
+      "',\n",
+      "                       callable = TRUE)\n\n",
+      "x_eval <- seq(min(x), max(x), length.out = 300)\n",
+      "y_eval <- fitted(x_eval)\n\n",
+      "par(mfrow=c(",n_deriv+1,",1))\n",
+      "plot(x, y, pch = 16, cex = 0.5, col = 'gray',main='fitted spline')\n",
+      "lines(x_eval, y_eval, col = '",
+      input$curve_color,
+      "', lwd = 2)\n",
+      "#PP-Polynomial coefficients of spline\n",
+      "Co=show_pp(fitted,local=",input$local,")", "\n",
+      "print(Co)\n",
+      deriv_code,
+      deriv_plot
+    )
+  })
+
+
+
+  # ============ ACTIONS on CURVES ============
+
+  observeEvent(input$apply_color, {
+    showNotification(paste("Color:", input$curve_color), type = "message")
+  })
+
+  observeEvent(input$clear_all_curves, {
+    values$curve_lines <- list()
+    showNotification("All curves cleared", type = "message")
+  })
+
+  observeEvent(input$clear_curves, {
+    ncurves<-length(values$curve_lines)
+    values$curve_lines[ncurves] <- NULL
+    showNotification("Last curve cleared", type = "message")
+  })
+
+  observeEvent(input$clear_all, {
+    values$xtab <- NULL
+    values$ytab <- NULL
+    values$knot <- NULL
+    values$fitted <- NULL
+    values$curve_lines <- list()
+    values$regions <- list()
+    values$region_id <- 0
+    values$selected_region_id <- NULL
+    values$data_name <- "No data"
+    showNotification("All cleared", type = "message")
+  })
+
+  # ============ DEMOS DU PACKAGE ============
+
+  demo_results <- reactiveValues(plot = NULL,
+                                 output = NULL,
+                                 height = 800)
+  demo_heights <- list(
+    comprehensive = 800,
+    monotonicity = 800,
+    logistic = 800,
+    temperature = 800,
+    temperature2 = 800,
+    convexity = 800,
+    degrees_comparison = 800,
+    demo_der3 = 800,
+    derivative2 = 1800
+  )
+
+
+
+  # Exécuter les démos
+  observeEvent(input$demo_comp, {
+    execute_demo("comprehensive")
+  })
+  observeEvent(input$demo_monot, {
+    execute_demo("monotonicity_basic")
+  })
+  observeEvent(input$demo_log, {
+    execute_demo("logistic")
+  })
+  observeEvent(input$demo_temp, {
+    execute_demo("temperature")
+  })
+  observeEvent(input$demo_temp2, {
+    execute_demo("temperature2")
+  })
+  observeEvent(input$demo_conv, {
+    execute_demo("convexity")
+  })
+  observeEvent(input$demo_degrees, {
+    execute_demo("degrees_comparison")
+  })
+  observeEvent(input$demo_der3, {
+    execute_demo("demo_der3")
+  })
+  observeEvent(input$demo_derivative, {
+    execute_demo("derivative2")
+  })
+
+  # Afficher les résultats
+  output$demo_plot <- renderPlot({
+    if (!is.null(demo_results$plot)) {
+      grid::grid.draw(demo_results$plot)
+    }
+  })
+
+  output$demo_output <- renderPrint({
+    if (!is.null(demo_results$output)) {
+      cat(paste(demo_results$output, collapse = "\n"))
+    }
+  })
+
+
+
+
+################VIEW BASIS
+  # ============ BASIS ============
+  basis_values <- reactiveValues(
+    basis_obj = NULL,
+    der_basis_obj = NULL,
+    x_eval = NULL,
+    y_eval = NULL,
+    derivative=0
+  )
+
+  observeEvent(input$basis_update, {
+    if (is.null(values$knot)){showNotification("No knot available",type="warning")
+      return()}
+    else{
+      if (length(values$knot)<2) {
+        showNotification("Need at least 2 knots",type="warning")
+        return()}
+      else{
+
+      withProgress(message = "Generating basis...", {
+      degree <- input$degree
+
+        knot <- values$knot
+        if (input$consider_multiplicity){
+          mult<-values$knot_multiplicity
+          }
+        else {
+          mult<-c(input$degree+1,rep(1,(length(values$knot)-2)),input$degree+1)
+          }
+
+
+      sn <- build_knot_sequence(values$knot,mult)
+      # Construire la base
+      basis_obj <- Bspline_base(sn, degree = degree, verbose = FALSE)
+
+      knot <- values$knot
+
+      if (input$verbose){
+      log_console(paste("Basis knots:", paste(round(knot, 4), collapse = ", ")))
+      }
+      # Dériver si nécessaire
+      der <- input$basis_derivative
+      if (der > 0) {
+        der_basis_obj <- Bspline_base_deriv(basis_obj, der = der, verbose = FALSE)
+      } else {
+        der_basis_obj <- basis_obj
+      }
+
+      # Points d'évaluation (avec une marge)
+      x_min <- min(knot) - 0.02 * diff(range(knot))
+      x_max <- max(knot) + 0.02* diff(range(knot))
+      x_eval <- seq(x_min, x_max, length.out = 300)
+
+      # Stocker
+      basis_values$basis_obj <- basis_obj
+      basis_values$der_basis_obj <- der_basis_obj
+      basis_values$x_eval <- x_eval
+      basis_values$derivative <- der
+
+
+      # Initialiser les multiplicités (1 par défaut)
+
+      showNotification(paste("Basis generated (degree", degree, ",", length(knot), "knots)"),
+                       type = "message")
+
+    }) # end "with progrees"
+
+  }# end else
+    } # end else
+  } #end action
+    )
+
+
+   output$basis_info <- renderPrint({
+    req(basis_values$der_basis_obj)
+
+    obj <- basis_values$der_basis_obj
+    cat("B-spline Basis Information\n")
+    cat("==========================\n")
+    cat("Degree:", obj$degree, "\n")
+    cat("Original degree:", input$degree, "\n")
+    cat("Number of basis functions:", obj$n_splines, "\n")
+    cat("Number of knots:", length(values$knots %||% numeric(0)), "\n")
+    cat("Derivative order:", input$basis_derivative, "\n")
+    cat("Basis dimension:", paste(dim(obj$base), collapse = " x "), "\n")
+  })
+
+  output$multiplicity_info <- renderPrint({
+    if (!is.null(values$knot)) {
+        cat("Knot multiplicities:\n")
+      l=length(values$knot)
+      for (i in 1:l) {
+        cat(sprintf("  %.4f: m=%d\n", values$knot[i], values$knot_multiplicity[i]))
+      }
+    } else {
+      cat("No knots defined")
+    }
+  })
+
+  # Dans le plot de la base
+  output$basis_plot <- renderPlot({
+    req(basis_values$der_basis_obj, basis_values$x_eval)
+
+    # Utiliser view_basis
+    view_basis(
+      basis_values$der_basis_obj,
+      x_values = basis_values$x_eval,
+      view_knot = input$basis_show_knots
+    )
+
+    # Ajouter les multiplicités manuellement
+    if (input$basis_show_knots && !is.null(values$knot)) {
+      y_range <- par("usr")[3:4]
+      y_pos <- y_range[1] + 0.02 * diff(y_range)
+      l=length(values$knot)
+      for (i in 1:l) {
+        mult <- values$knot_multiplicity[i]
+        if (mult > 0) {
+          text(values$knot[i], y_pos, if (input$basis_show_multiplicity){
+               labels = paste0("m=", mult)}else{""},
+               col = "blue", cex = 0.7, srt = 90, adj = 0)
+        }
+      }
+    }
+  })
+
+
+
+# ============ MULTIPLICITY CONTROL ============
+
+  observeEvent(input$consider_multiplicity, {
+    values$consider_multiplicity <- input$consider_multiplicity
+    updateCheckboxInput(session, "consider_multiplicity_main",
+                        value = input$consider_multiplicity)
+  })
+
+  # Synchronisation : Main → Basis
+  observeEvent(input$consider_multiplicity_main, {
+    values$consider_multiplicity <- input$consider_multiplicity_main
+    updateCheckboxInput(session, "consider_multiplicity",
+                        value = input$consider_multiplicity_main)
+  })
+
+  # Initialisation (au démarrage)
+  observe({
+    # Mettre à jour les deux checkbox avec la valeur initiale
+    updateCheckboxInput(session, "consider_multiplicity_basis",
+                        value = values$consider_multiplicity)
+    updateCheckboxInput(session, "consider_multiplicity_main",
+                        value = values$consider_multiplicity)
+
+  })
+
+
+# ============ KNOT MULTIPLICITY CONTROL ============
+
+# Augmenter la multiplicité
+observeEvent(input$inc_multiplicity, {
+  idx <- selected_knot()
+  if (is.null(idx)) {
+    showNotification("Select a knot first!", type = "warning")
+    return()
+  }
+  # Vérifier que ce n'est pas un nœud d'extrémité
+  if (idx == 1 || idx == length(values$knot)) {
+    showNotification("Cannot modify endpoint knots!", type = "warning")
+    return()
+  }
+  current_mult <- values$knot_multiplicity[idx]
+  update_knot_multiplicity(idx, current_mult + 1)
+  showNotification(paste("Increased multiplicity of knot", idx), type = "message")
+})
+
+# Diminuer la multiplicité
+observeEvent(input$dec_multiplicity, {
+  idx <- selected_knot()
+  if (is.null(idx)) {
+    showNotification("Select a knot first!", type = "warning")
+    return()
+  }
+  if (idx == 1 || idx == length(values$knot)) {
+    showNotification("Cannot modify endpoint knots!", type = "warning")
+    return()
+  }
+
+  current_mult <- values$knot_multiplicity[idx]
+  update_knot_multiplicity(idx, current_mult - 1)
+  showNotification(paste("Decreased multiplicity of knot", idx), type = "message")
+})
+
+#update knots multiplicities
+observeEvent(input$degree,{
+  if (!is.null(values$knot_multiplicity)){
+  kn<-length(values$knot)-1
+  degree<-input$degree
+  values$knot_multiplicity[1]<-degree+1
+  values$knot_multiplicity[kn+1]<-degree+1
+  #limit intern multiplicities
+  for (i in 2:kn){
+  if (values$knot_multiplicity[i]>(degree+1))
+  {
+    values$knot_multiplicity[i]<-degree+1
+  }}
+  }
+
+})
+
+
+
+#reset la multiplicite
+observeEvent(input$reset_multiplicity, {
+  reset_multiplicity()
+})
+
+
+
+
+#--------------------------------------------------
+#====================================================
+#=================FUNCTIONS==========================
+#=This section is dedicated to functions for the App=
+#====================================================
+#-----------------------------------------------------
+
+
+# ============ KNOT MANAGEMENT ============
+
+reset_multiplicity<-function()
+{tn=length(values$knot)
+degree<-input$degree
+if (tn>=1){
+  values$knot_multiplicity<-rep(1,tn)
+  update_knot_multiplicity(tn,degree+1)
+  update_knot_multiplicity(1,degree+1)
+  for (idx in 2:(tn-2) )
+  {update_knot_multiplicity(idx,1)}
+  }
+else{showNotification("Not enough knots",type=warning)}
+}
+
+
+# Construire la séquence de nœuds avec multiplicités
+build_knot_sequence <- function(knots, multiplicities)
+{
+  # Vérifier les entrées
+  if (is.null(knots) || length(knots) == 0) {
+    return(c())
+  }
+  if (is.null(multiplicities) || length(multiplicities) != length(knots)) {
+    stop("knots and multiplicities must have same length")
+  }
+
+  knot_seq <- c()
+  for (i in seq_along(knots)) {
+    knot_seq <- c(knot_seq, rep(knots[i], multiplicities[i]))
+  }
+  return(knot_seq)
+}
+
+
+# Initialiser les nœuds avec multiplicités
+init_knots <- function(xtab, n_knots) {
+  # Générer des nœuds quantiles
+  knot<- as.numeric(quantile(xtab, probs = seq(0, 1, length.out = n_knots + 1)))
+
+  # Multiplicités initiales (1 par défaut pour les nœuds internes)
+  # Les extrémités ont multiplicité degree + 1
+  degree <- input$degree
+  mult <- rep(1, length(knot))
+  mult[1] <- degree + 1
+  mult[length(mult)] <- degree + 1
+
+  return(list(knot = knot, multiplicities = mult))
+}
+
+
+
+
+# Mettre à jour la multiplicité d'un nœud
+update_knot_multiplicity <- function(idx, new_mult) {
+  if (is.null(values$knot)) return()
+  if (idx < 1 || idx > length(values$knot)) return()
+
+  # Ne pas modifier les extrémités
+  if (idx == 1 || idx == length(values$knot)) {
+    showNotification("Cannot modify endpoint knots!", type = "warning")
+    return()
+  }
+
+  # Limiter la multiplicité
+  degree <- input$degree
+  new_mult <- max(1, min(new_mult, degree + 1))
+
+  # Mettre à jour les métadonnées
+  values$knot_multiplicity[idx] <- new_mult
+  values$knot_multiplicity[1]<-degree+1
+  values$knot_multiplicity[length(values$knot)]<-degree+1
+
+  # Reconstruire la séquence étendue
+  values$knot_extended <- build_knot_sequence(
+    values$knot,
+    values$knot_multiplicity
+  )
+
+  showNotification(paste("Knot", idx, "multiplicity set to", new_mult),
+                   type = "message")
+}
+
+#========== Demo Execution ==============
+
+
+execute_demo <- function(demo_name) {
+  showNotification(paste("Running demo:", demo_name), type = "message")
+
+  withProgress(message = paste("Running", demo_name, "..."), {
+    # Récupérer la hauteur depuis la liste
+    demo_height <- demo_heights[[demo_name]] %||% 800
+    demo_width <- if (demo_name == "derivative2")
+      1500
+    else
+      800
+    # Créer un fichier temporaire pour l'image
+    temp_file <- tempfile(fileext = ".png")
+
+    # Ouvrir un device PNG
+
+    png(temp_file,
+        width = demo_width,
+        height = demo_height,
+        res = 120)
+
+    # Créer un environnement avec la variable degree
+    demo_env <- new.env()
+    demo_env$degree <- input$degree
+    demo_env$par <- graphics::par
+    demo_results$height <- demo_height
+
+    # Capturer la sortie
+    output_text <- capture.output({
+      tryCatch({
+        with(demo_env, {
+          source(
+            system.file("demo", paste0(demo_name, ".R"), package = "BsplineQuantReg"),
+            local = TRUE,
+            echo = FALSE
+          )
+        })
+      }, error = function(e) {
+        cat("Error:", e$message, "\n")
+      })
+    })
+
+    # Fermer le device
+    dev.off()
+
+    # Lire l'image
+    if (file.exists(temp_file)) {
+      img <- png::readPNG(temp_file)
+      demo_results$plot <- grid::rasterGrob(img, interpolate = TRUE)
+      unlink(temp_file)
+    } else {
+      demo_results$plot <- NULL
+    }
+
+    demo_results$output <- output_text
+
+    runjs('document.getElementById("demo_area").style.display = "block";')
+  })
+}
+
+
+# ============ CONSTRAINT SYMBOL FUNCTION ============
+get_sym <- function(val, symbols) {
+  if (is.null(val) || is.na(val))
+    return("x")
+  val <- as.numeric(val)
+  if (!val %in% c(-1, 0, 1))
+    return("x")
+  return(symbols[val + 2])
+}
+
+# ============ FIELD UPDATE FUNCTION ============
+update_region_fields <- function(xmin, xmax) {
+  if (is.null(xmin) ||
+      is.null(xmax) || is.na(xmin) || is.na(xmax))
+    return()
+  if (xmin >= xmax) {
+    showNotification("X min must be less than X max", type = "warning")
+    return()
+  }
+  updateNumericInput(session, "region_xmin", value = round(xmin, 3))
+  updateNumericInput(session, "region_xmax", value = round(xmax, 3))
+}
+
+
+# ============ CONSTRAINT CONSTRUCTION ============
+
+build_constraints <- function() {
+
+
+  if (is.null(values$knot)) {
+    showNotification("No knots available!", type = "warning")
+    return(NULL)
+  }
+  degree <- input$degree
+  kn <- length(values$knot) - 1
+    # Contraintes uniformes
+    if (input$constraint_mode == "uniform") {
+     monot_val <- as.numeric(input$monot)
+     conv_val <- as.numeric(input$conv)
+     der3_val <- as.numeric(input$der3)
+
+     if (is.na(monot_val)) monot_val <- 0
+     if (is.na(conv_val)) conv_val <- 0
+     if (is.na(der3_val)) der3_val <- 0
+
+     monot <- rep(monot_val, kn + 1)
+     conv <- rep(conv_val, kn + 1)
+     der3 <- rep(der3_val, kn + 1)
+
+     if (degree < 3) {der3 <- rep(0, kn + 1)}
+
+  }
+  else {
+    # Mode région
+    monot <- rep(0, kn+1)
+    conv <- rep(0, kn + 1)
+    der3 <- rep(0, kn + 1)
+
+    for (region in values$regions) {
+      for (i in 1:kn) {
+        x1 <- values$knot[i]
+        x2 <- values$knot[i + 1]
+        if (x2 > region$xmin && x1 < region$xmax) {
+          if (region$monot != 0) monot[i] <- region$monot
+          if (region$conv != 0) {
+            conv[i] <- region$conv
+            conv[i + 1] <- region$conv
+          }
+          if (region$der3 != 0 && degree >= 3) {
+            der3[i] <- region$der3
+          }
+        }
+      }
+    }
+  }
+
+  if (input$consider_multiplicity)
+    {
+    mult_monot<-c(monot[1])
+    mult_conv<-c(conv[1])
+    mult_der3<-c(der3[1])
+    for (i in 2:kn)
+    { mult_monot<-c(mult_monot,rep(monot[i],values$knot_multiplicity[i]))
+    mult_conv<-c(mult_conv,rep(conv[i],values$knot_multiplicity[i]))
+    mult_der3<-c(mult_der3, rep(der3[i],values$knot_multiplicity[i]))
+    }
+    mult_monot<-c(mult_monot,monot[kn+1])
+    mult_conv<-c(mult_conv,conv[kn+1])
+    mult_der3<-c(mult_der3,der3[kn+1])
+
+    monot<-mult_monot
+    conv<-mult_conv
+    der3<-mult_der3
+  }
+
+  return(list(
+    monot = monot,
+    conv = conv,
+    der3 = der3
+  ))
+}
+
+#=============================================================
+#                     END OF FUNCTION SECTION
+#-------------------------------------------------------------
+#=============================================================
+
+
+}# End server()
+
+# Run app
+shinyApp(ui = ui, server = server)

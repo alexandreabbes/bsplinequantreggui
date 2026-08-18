@@ -1,6 +1,9 @@
 #BsplineQuantRegGui 0.2.2
 ### Fixes :
 - update end knots multiplicities according to degree.
+- temp data without scaling years
+- updating auto_knot/manual_knot
+- prevent problem with warning with execption and warning
 
 ### Problem :
 - for degree=1: monotone regression with knot multiplicities cuase the solvers to hang
