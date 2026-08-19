@@ -3,11 +3,12 @@
 - update end knots multiplicities according to degree.
 - temp data without scaling years
 - updating auto_knot/manual_knot
-- prevent problem with warning with execption and warning
+- prevent problem of core program if version 0.2.4 with exeption and warning
 
-### Problem :
+
+### Problem of core program version 0.2.4:
 - for degree=1: monotone regression with knot multiplicities cuase the solvers to hang
-Problem of the core programm, not solved yet.
+(fixed in version 0.2.5).
 
 
 # BsplineQuantRegGui 0.2.1

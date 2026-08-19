@@ -1230,9 +1230,9 @@ observeEvent(c(input$auto_knot_count, input$generate_custom),  {
       console_text <- character()
       #problem in special case constraints with multiplicities and degree==1
       tn=length(knot)
-      exept=(input$degree==1 && input$consider_multiplicity) && (any(constraints$monot!=0) && (any(values$knot_multiplicity[2:(tn-1)]>1)))
+      exept=version<'0.2.5' &&(input$degree==1 && input$consider_multiplicity) && (any(constraints$monot!=0) && (any(values$knot_multiplicity[2:(tn-1)]>1)))
 if (exept) {
-showNotification("Linear regression does not work in case of constraints with multiplicities\n Unckeck multiplicities or remove constrnaits",type='warning')
+showNotification("in 0.2.4, Linear regression fails in case of constraints with multiplicities\n Unckeck multiplicities or remove constrnaits",type='warning')
 return()}
 
       # Rediriger stdout
