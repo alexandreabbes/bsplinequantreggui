@@ -1,0 +1,182 @@
+---
+title: "TEST-README"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Testing BsplineQuantRegGui
+
+This directory contains the complete test suite for the
+BsplineQuantRegGui package.
+
+## Overview
+
+These tests **do not directly test the GUI interface itself** (i.e.,
+they do not simulate user interactions with the Shiny app). Instead,
+they test the **core logic and functions** that power the GUI, ensuring
+the global coherence and reliability of the application's backend.
+
+### Test Strategy
+
+The package provides **two versions** of the Shiny application:
+
+| Version | App | Core Version | Features |
+|----------------|----------------|------------------------|-----------------|
+| **Basic** | `app1/` | `BsplineQuantReg >= 0.2.2` | Standard quantile regression, constraints, regions |
+| **Advanced** | `app2/` | `BsplineQuantReg >= 0.2.5` | All basic features + knot multiplicity, derivatives, basis visualization |
+
+Tests are structured accordingly to validate both versions independently
+while sharing common test logic.
+
+------------------------------------------------------------------------
+
+## Test File Structure
+
+```         
+tests/
+├── testthat.R                         # Main test runner
+├── run-all-tests.R                    # Manual test runner with summary
+├── test-common.R                      # Tests common to both versions
+├── test-basic-features.R              # Tests specific to basic version
+├── test-advanced-features.R           # Tests specific to advanced version
+├── testthat/
+   ├── common/                        # Shared test resources
+   │   ├── helper.R                   # Common helpers
+   │   ├── test-region-management.R   # Region tests (both versions)
+   │   ├── test-server.R              # Server logic tests (both versions)
+   │   └── test-utils.R               # Utility tests (both versions)
+   ├── basic/                         # Basic version tests (app1)
+   │   ├── helper.R                   # Basic-specific helpers
+   │   ├── test-logic.R               # Basic server logic
+   │   ├── test-regression.R          # Basic regression tests
+   │   ├── test-app-shiny.R           # Basic Shiny app tests
+   │   └── shinytest2.R               # Basic UI tests (optional)
+   ├── advanced/                      # Advanced version tests (app2)
+      ├── helper.R                   # Advanced-specific helpers
+      ├── helper-functions-App.R     # Advanced app functions
+      ├── test-logic.R               # Advanced server logic
+      ├── test-regression.R          # Advanced regression tests
+      ├── test-gui-020.R             # GUI tests with multiplicity
+      ├── test-supp-020.R            # Supplementary tests
+      ├── test-utils.R               # Advanced utility tests
+      └── shinytest2.R               # Advanced UI tests (optional)
+```
+
+## Test Files Overview
+
+## Test Coverage by Component
+
+| Component | Basic (app1) | Advanced (app2) | Common |
+|----------------|------------------|----------------------|----------------|
+| **Server Logic** | ✅ `test-logic.R` | ✅ `test-logic.R` | ✅ `test-server.R` |
+| **Regression** | ✅ `test-regression.R` | ✅ `test-regression.R` | \- |
+| **Regions** | \- | \- | ✅ `test-region-management.R` |
+| **Multiplicity** | ❌ Not applicable | ✅ `test-gui-020.R` | \- |
+| **Derivatives** | ❌ Not applicable | ✅ `test-gui-020.R` | \- |
+| **Utilities** | \- | \- | ✅ `test-utils.R` |
+
+## Running Tests
+
+### Option 1: Run All Tests (Recommended)
+
+``` r
+devtools::test()
+```
+
+### Option 2: Run Specific Test Category
+
+``` r
+# Run only common tests
+devtools::test(filter = "common")
+
+# Run only basic tests
+devtools::test(filter = "basic")
+
+# Run only advanced tests
+devtools::test(filter = "advanced")
+
+# Run only region tests
+testthat::test_file("tests/testthat/common/test-region-management.R")
+```
+...
+
+## Test Requirements
+
+### For All Tests:
+
+- `testthat` (\>= 3.0.0)
+- `BsplineQuantReg` package installed
+
+### For Basic Tests:
+
+- `BsplineQuantReg` \>= 0.2.2
+
+### For Advanced Tests:
+
+- `BsplineQuantReg` \>= 0.2.5
+
+### For UI Tests (shinytest2):
+(in future versions maybe)
+- `shinytest2` package
+- Headless Chrome or Chromium browser
+- Interactive session (tests are skipped on CRAN)
+- App must be available at `inst/shiny/app1/` or `inst/shiny/app2/`
+
+### Environment Setup:
+
+``` r
+# Install test dependencies
+install.packages(c("testthat")
+
+# Install the package in development mode
+devtools::install()
+
+# Run tests
+devtools::test()
+```
+
+### CI/CD Test Behavior:
+
+- Advanced tests are skipped if `BsplineQuantReg < 0.2.5`
+
+------------------------------------------------------------------------
+
+## Test Categories
+
+| Category | Location | Description |
+|----------------------|----------------------|----------------------------|
+| **Common Tests** | `common/` | Tests shared by both versions |
+| **Basic Tests** | `basic/` | Tests specific to basic version |
+| **Advanced Tests** | `advanced/` | Tests specific to advanced version |
+
+------------------------------------------------------------------------
+
+
+
+## Debugging Failed Tests
+
+### Check Test Output:
+
+``` r
+# Run with verbose output
+devtools::test(reporter = "debug")
+
+# Run specific test with verbose output
+testthat::test_file("tests/testthat/common/test-region-management.R", 
+                    reporter = "verbose")
+```
+
+
+## License
+
+This test suite is part of BsplineQuantRegGui and is licensed under
+GPL-3.
+
+------------------------------------------------------------------------
+
+**Last Updated:** 2026-08-20 **Maintainer:** Alexandre Abbes
+[alexandre.abbes\@proton.me](mailto:alexandre.abbes@proton.me){.email}
+**Current Version:** 0.2.0 **Core Package:** BsplineQuantReg \>= 0.2.2
+(basic), \>= 0.2.5 (advanced) \`\`\`

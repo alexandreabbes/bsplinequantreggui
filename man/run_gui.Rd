@@ -2,31 +2,45 @@
 % Please edit documentation in R/runGui.R
 \name{run_gui}
 \alias{run_gui}
-\title{Launch the 'BsplineQuantReg' Shiny Interface
-Opens an interactive Shiny application for quantile regression
-using B-splines with shape constraints.}
+\title{Launch 'BsplineQuantReg' Shiny Interface (Wrapper Function)}
 \usage{
-run_gui(brow = TRUE, rstudio = FALSE, host = "127.0.0.1", port = 3674)
+run_gui(
+  level = "advanced",
+  brow = TRUE,
+  rstudio = FALSE,
+  host = "127.0.0.1",
+  port = 3674
+)
 }
 \arguments{
-\item{brow}{Boolean if TRUE launches the default browser in the system.}
+\item{level}{Character or numeric. Specify which version to launch:
+\code{1} or \code{"basic"}: Basic version
+\code{2} or \code{"advanced"}: Advanced version (default)}
 
-\item{rstudio}{Boolean if TRUE launches the shiny browser of rstudio.}
+\item{brow}{Logical. If TRUE, launches the app in the system's default browser.}
 
-\item{host}{address of the server. Default is '127.0.0.1'}
+\item{rstudio}{Logical. If TRUE, launches the app in RStudio's viewer pane.}
 
-\item{port}{port to reach the app on the server default is 3674}
+\item{host}{Character. Server address. Default is '127.0.0.1'.}
+
+\item{port}{Integer. Port to run the app on. Default is 3674.}
 }
 \value{
-Launches a Shiny application in the default browser.
+Launches the selected Shiny application.
 }
 \description{
-Launch the 'BsplineQuantReg' Shiny Interface
-Opens an interactive Shiny application for quantile regression
-using B-splines with shape constraints.
+Unified launcher for both basic and advanced versions of the application.
 }
 \examples{
-if (interactive()) {
-  run_gui()
+\dontrun{
+# Launch advanced version (default)
+run_gui()
+run_gui("advanced")
+run_gui(2)
+
+# Launch basic version
+run_gui("basic")
+run_gui(1)
 }
+
 }
