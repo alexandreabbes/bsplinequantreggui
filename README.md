@@ -15,7 +15,11 @@ BsplineQuantRegGui is an interactive Shiny interface for the BsplineQuantReg pac
 
 The package is available on CRAN.
 
-The underlying BsplineQuantReg package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form.
+The underlying BsplineQuantReg package provides the core regression methods for B-spline 
+quantile regression with Karlin-Studden polynomial sign characterization, 
+including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, 
+piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations
+and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
 
 ## Features
 
@@ -23,7 +27,7 @@ This GUI application makes it easy to:
 
 - Load and visualize data (from multiple data sources: custom function, CSV files)
 - Interactive plotting: zoom, pan, and add knots by clicking on the plot
-- Configure B-spline parameters (degree 1 to 4)
+- Configure B-spline parameters (degree 1 to 4), visualise the basis.
 - Plot multiple curves with color management
 - Apply shape constraints (monotonicity, convexity, third derivative)
 - Manage constraints per region interactively
@@ -31,6 +35,8 @@ This GUI application makes it easy to:
 - Export reproducible R code
 - Run demo presets directly from the interface (according to degree)
 - Type of regression : quantile or mean-square (for 'BsplineQuantReg' version \>=0.2.3)
+- add/remove manual knots and their multiplicity.
+- control constraints vith derivatives.
 
 ## Installation
 
@@ -162,7 +168,7 @@ This package depends on:
 
 ### 5. Run Demos
 
-Click on any demo to run it. The degree of the spline is that selected in the GUI.
+- Click on any demo to run it, and visualise in the demo tab. The degree of the spline is that selected in the GUI.
 
 ## Citation
 
