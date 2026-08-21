@@ -66,7 +66,7 @@ docker pull ghcr.io/alexandreabbes/bsplinequantreggui:latest
 docker run -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
 ```
 
-Then open <http://localhost:3838> in your browser.
+Then open <http://127.0.0.1:3838> in your browser.
 
 
 ## Requirements
