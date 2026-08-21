@@ -11,11 +11,11 @@ editor_options:
 
 ## Overview
 
-BsplineQuantRegGui is an interactive Shiny interface for the BsplineQuantReg package, providing a user-friendly way to perform quantile regression using B-splines with shape constraints.
+'BsplineQuantRegGui' is an interactive Shiny interface for the 'BsplineQuantReg' package, providing a user-friendly way to perform quantile regression using B-splines with shape constraints.
 
 The package is available on CRAN.
 
-The underlying BsplineQuantReg package provides the core regression methods for B-spline 
+The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline 
 quantile regression with Karlin-Studden polynomial sign characterization, 
 including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, 
 piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations
@@ -85,8 +85,8 @@ Then open <http://127.0.0.1:3838> in your browser.
 ## Requirements
 
 ### Core Package
-- **Minimum version**: BsplineQuantReg >= 0.2.2 (Basic mode)
-- **Recommended version**: BsplineQuantReg >= 0.2.5 (All features)
+- **Minimum version**: 'BsplineQuantReg' >= 0.2.2 (Basic mode)
+- **Recommended version**: 'BsplineQuantReg' >= 0.2.5 (All features)
 
 ### Version Compatibility
 
@@ -99,14 +99,14 @@ This package depends on:
 
 | Package | Purpose |
 |----|----|
-| BsplineQuantReg (\>= 0.2.5) | Core regression functions |
-| shiny | Interactive web framework |
-| plotly | Interactive graphics |
-| DT | Interactive tables |
-| shinythemes | UI themes |
-| shinyjs | Enhanced JavaScript capabilities |
-| colourpicker | Color selection widget |
-| ECOSolveR | A good solver that causes no problem to compile |
+| 'BsplineQuantReg' (\>= 0.2.5) | Core regression functions |
+| 'shiny' | Interactive web framework |
+| 'plotly' | Interactive graphics |
+| 'DT' | Interactive tables |
+| 'shinythemes' | UI themes |
+| 'shinyjs' | Enhanced JavaScript capabilities |
+| 'colourpicker' | Color selection widget |
+| 'ECOSolveR' | A good solver that causes no problem to compile |
 
 ## Usage Guide
 
@@ -187,5 +187,5 @@ GPL-3 (c) Alexandre Abbes (2026)
 ## References
 
 - Abbes, A. (2025). Quantile Regression with Cubic Polynomial Splines under Shape Constraints with Applications. Zenodo. <doi:10.5281/zenodo.17427913>
-- Abbes, A. (2026). BsplineQuantReg: R Implementation of B-Spline Quantile Regression. <https://cran.r-project.org/package=BsplineQuantReg>
-- Abbes, A. (2026). BsplineQuantRegpy: Python Implementation of B-Spline Quantile Regression. <https://pypi.org/project/BsplineQuantRegpy/>
+- Abbes, A. (2026). 'BsplineQuantReg': R Implementation of B-Spline Quantile Regression. <https://cran.r-project.org/package=BsplineQuantReg>
+- Abbes, A. (2026). 'BsplineQuantRegpy': Python Implementation of B-Spline Quantile Regression. <https://pypi.org/project/BsplineQuantRegpy/>

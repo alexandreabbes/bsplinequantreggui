@@ -492,8 +492,6 @@ uiOutput("derivatives_ui"))
                 column(
                   3,
 
-
-
                   hr(),
                   h4("Derivative"),
                   sliderInput("basis_derivative", "Derivative order:",
@@ -1235,10 +1233,6 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
       console_text <- character()
       #problem in special case constraints with multiplicities and degree==1
       tn=length(knot)
-      exept=version<'0.2.5' &&(values$degree==1 && input$consider_multiplicity) && (any(constraints$monot!=0) && (any(values$knot_multiplicity[2:(tn-1)]>1)))
-if (exept) {
-showNotification("in 0.2.4, Linear regression fails in case of constraints with multiplicities\n Unckeck multiplicities or remove constrnaits",type='warning')
-return()}
 
       # Rediriger stdout
       sink(tempfile())
@@ -1710,10 +1704,14 @@ return()}
 
           # Évaluer la dérivée : callable b-spline
           # exception pour degree 1 et 1 seul intervalle
-          #param=get_parameters(deriv_spline)
-          #if (param$degree==0 && length(param$coeff)==1)
-          #  y_vals=rep(param$coeff,length(x_vals))
-          #else
+          param<-get_parameters(deriv_spline)
+          version<-packageVersion("BsplineQuantReg")
+          exception025<-(param$degree==0 && length(values$knot)==2) && (version<"0.2.6")
+          if (exception025)
+            {
+            #showNotification("Exception025", type="warning")
+            y_vals=rep(param$coeff,length(x_vals))}
+          else
             y_vals <- deriv_spline(x_vals)
 
           colors <- c("blue", "darkgreen", "purple")
@@ -2135,15 +2133,41 @@ return()}
     req(basis_values$der_basis_obj, basis_values$x_eval)
 
     # Utiliser view_basis
-    #d<-values$degree-basis_values$derivative
-    #if ((d==0) && length(values$knot)<3) {
-    #  showNotification("Limit case not handled yet",type='warning')
-    #  return()
-    #  }
+    x_values<-basis_values$x_eval
+    version<-packageVersion("BsplineQuantReg")
+      d<-values$degree-basis_values$derivative
+    exception025<-(d==0 && length(values$knot)==2) && (version<"0.2.6")
+      if (exception025)
+      {
+      coeff<-as.vector(basis_values$der_basis_obj$base[,2,])
+      y_values<-array(0,dim=c(2,length(x_values)))
+      y_values[1,]<-rep(coeff[1],length(x_values))
+      y_values[2,]<-rep(coeff[2],length(x_values))
 
+      matplot(
+        x_values,
+        t(y_values),
+        type = "l",
+        lwd = 1.5,
+        xlab = "x",
+        ylab = "Basis values",
+        lty = 1
+      )
+
+      if (input$basis_show_knots) {
+        abline(
+          v = BB$knot,
+          col = "red",
+          lty = 2,
+          lwd = 0.8
+        )
+        grid(col = "gray90", lty = 1)
+      }
+      }
+   else
     view_basis(
       basis_values$der_basis_obj,
-      x_values = basis_values$x_eval,
+      x_values = x_values,
       view_knot = input$basis_show_knots
     )
 
