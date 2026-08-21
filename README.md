@@ -70,7 +70,8 @@ docker run -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
 docker run -e APP_VERSION="basic" -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
 #APP_VERSION :  either 1 || "basic"" or 2 || "advanced" 
 ```
-Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes").
+
+Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 
 ## Requirements
 
