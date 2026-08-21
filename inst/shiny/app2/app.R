@@ -636,7 +636,6 @@ server <- function(input, output, session) {
       values$fitted <- NULL
       values$curve_lines <- list()
       values$regions <- list()
-      values$knot<-values$auto_knot_values
       showNotification("Test data generated", type = "message")
 
 
