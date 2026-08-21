@@ -63,7 +63,14 @@ A Docker image is available for easy deployment:
 
 ``` bash
 docker pull ghcr.io/alexandreabbes/bsplinequantreggui:latest
-docker run ghcr.io/alexandreabbes/bsplinequantreggui:latest
+
+# Launch default version (advanced)
+docker run -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
+
+# Launch basic version
+docker run -e APP_VERSION="basic" -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
+#APP_VERSION :  either 1 || "basic"" or 2 || "advanced" 
+
 ```
 
 Then open <http://127.0.0.1:3838> in your browser.
