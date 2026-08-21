@@ -1,7 +1,3 @@
-------------------------------------------------------------------------
-
-editor_options: markdown: wrap: 72 ---
-
 # BsplineQuantRegGui
 
 [![CRAN status](https://www.r-pkg.org/badges/version/BsplineQuantRegGui)](https://cran.r-project.org/package=BsplineQuantRegGui) [![CRAN downloads](https://cranlogs.r-pkg.org/badges/BsplineQuantRegGui)](https://cran.r-project.org/package=BsplineQuantRegGui) [![R](https://img.shields.io/badge/R%3E=4.6-blue.svg)](https://cran.r-project.org/) [![License: GPL-3](https://img.shields.io/badge/License-GPL--3-blue.svg)]

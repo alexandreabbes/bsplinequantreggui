@@ -2108,12 +2108,11 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
     obj <- basis_values$der_basis_obj
     cat("B-spline Basis Information\n")
     cat("==========================\n")
-    cat("Degree:", obj$degree, "\n")
-    cat("Original degree:", values$degree, "\n")
-    cat("Number of basis functions:", obj$n_splines, "\n")
-    cat("Number of knots:", length(values$knots %||% numeric(0)), "\n")
+    cat("Degree:", obj$degree)
+    cat(" (Original degree:", values$degree,")\n")
     cat("Derivative order:", input$basis_derivative, "\n")
-    cat("Basis dimension:", paste(dim(obj$base), collapse = " x "), "\n")
+    cat("Number of basis functions:", obj$n_splines, "\n")
+    cat("Number of knots:", length(values$knot), "\n")
   })
 
   output$multiplicity_info <- renderPrint({
@@ -2156,7 +2155,7 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
 
       if (input$basis_show_knots) {
         abline(
-          v = BB$knot,
+          v = basis_values$der_basis_obj$knot,
           col = "red",
           lty = 2,
           lwd = 0.8
