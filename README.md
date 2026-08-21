@@ -1,9 +1,6 @@
----
+------------------------------------------------------------------------
 
-editor_options: 
-  markdown: 
-    wrap: 72
----
+editor_options: markdown: wrap: 72 ---
 
 # BsplineQuantRegGui
 
@@ -15,11 +12,7 @@ editor_options:
 
 The package is available on CRAN.
 
-The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline 
-quantile regression with Karlin-Studden polynomial sign characterization, 
-including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, 
-piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations
-and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
+The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
 
 ## Features
 
@@ -76,24 +69,22 @@ docker run -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
 # Launch basic version
 docker run -e APP_VERSION="basic" -p 3838:3838 ghcr.io/alexandreabbes/bsplinequantreggui:latest
 #APP_VERSION :  either 1 || "basic"" or 2 || "advanced" 
-
 ```
-
-Then open <http://127.0.0.1:3838> in your browser.
-
+Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes").
 
 ## Requirements
 
 ### Core Package
-- **Minimum version**: 'BsplineQuantReg' >= 0.2.2 (Basic mode)
-- **Recommended version**: 'BsplineQuantReg' >= 0.2.5 (All features)
+
+- **Minimum version**: 'BsplineQuantReg' \>= 0.2.2 (Basic mode)
+- **Recommended version**: 'BsplineQuantReg' \>= 0.2.5 (All features)
 
 ### Version Compatibility
 
-| GUI Version | Core Version | Mode | Features |
-|-------------|--------------|------|----------|
-| v0.2.2 | >= 0.2.2 | Basic | Standard regression, constraints |
-| v0.2.2 | >= 0.2.5 | Advanced | All features incl. multiplicity |
+| GUI Version | Core Version | Mode     | Features                         |
+|-------------|--------------|----------|----------------------------------|
+| v0.2.2      | \>= 0.2.2    | Basic    | Standard regression, constraints |
+| v0.2.2      | \>= 0.2.5    | Advanced | All features incl. multiplicity  |
 
 This package depends on:
 
