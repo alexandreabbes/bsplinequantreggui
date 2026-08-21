@@ -34,7 +34,7 @@ RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'ma
 # Vérifier le contenu pour le debug
 #RUN ls -la /app/inst/shiny/
 
-#EXPOSE 3838
+#EXPOSE 3674
 
 # Lancer l'application (version avancée par défaut)
 #CMD ["R", "-e", "shiny::runApp('/app/inst/shiny/app2)"]
@@ -49,8 +49,5 @@ if [ -z "$APP_VERSION" ]; then\n\
   APP_VERSION="advanced"\n\
 fi\n\
 echo "Launching app: $APP_VERSION"\n\
-R -e "library(BsplineQuantRegGui); run_gui(level = \"$APP_VERSION\", brow = FALSE, host = \"0.0.0.0\", port = 3838)"' > /app/start.sh && chmod +x /app/start.sh
+R -e "library(BsplineQuantRegGui); run_gui(level = \"$APP_VERSION\", brow = FALSE)"' > /app/start.sh && chmod +x /app/start.sh
 
-EXPOSE 3838
-
-CMD ["/app/start.sh"]
