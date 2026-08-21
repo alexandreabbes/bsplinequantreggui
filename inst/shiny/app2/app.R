@@ -624,12 +624,12 @@ server <- function(input, output, session) {
 
   observeEvent(input$test_data, {
     withProgress(message = "Generating...", {
-      set.seed(42)
+      set.seed(24)
       n <- 200
       xmin <- input$data_xmin
       xmax <- input$data_xmax
       x <- as.vector(seq(xmin, xmax, length.out = n))
-      y <- as.vector(2 * x + 0.2 * sin(10 * pi * x) + 0.05 * rnorm(n))
+      y <- as.vector(2 * x + 0.2 * sin(10 * pi * x) + 0.2 * rnorm(n))
       values$xtab <- x
       values$ytab <- y
       values$data_name <- paste("Test [", xmin, ",", xmax, "]")
@@ -637,6 +637,7 @@ server <- function(input, output, session) {
       values$curve_lines <- list()
       values$regions <- list()
       showNotification("Test data generated", type = "message")
+
     })
   })
 
