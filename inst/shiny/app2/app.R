@@ -1,7 +1,7 @@
 # BsplineQuantReg Shiny Interface
 # Author: Alexandre Abbes
 
-# Version 0.2.1
+# Version 0.2.3
 # Run with:
 # shiny::runApp("R/run_gui.R")
 
@@ -129,8 +129,8 @@ ui <- fluidPage(
           "degree",
           "Degree:",
           value = 3,
-          min = 1,
-          max = 4
+          min = 0#,
+#          max = 4
         )
       ), column(
         6,
@@ -247,6 +247,9 @@ ui <- fluidPage(
 
             column(
               3,
+              conditionalPanel(
+                condition = "input.degree<6",
+
               h3("3. Constraints", class = "text-primary"),
               radioButtons(
                 "constraint_mode",
@@ -258,22 +261,27 @@ ui <- fluidPage(
 
               conditionalPanel(
                 condition = "input.constraint_mode == 'uniform'",
+                conditionalPanel(
+                  condition = "input.degree<=4",
                 radioButtons(
                   "monot",
                   "Monotonicity:",
                   choices = c("x" = "0", "up" = "1", "down" = "-1"),
                   selected = "0",
                   inline = TRUE
+                )
                 ),
+              conditionalPanel(
+                condition = "input.degree>=2 & input.degree<=5",
                 radioButtons(
                   "conv",
                   "Convexity:",
                   choices = c("x" = "0", "U" = "1", "n" = "-1"),
                   selected = "0",
                   inline = TRUE
-                ),
+                )),
                 conditionalPanel(
-                  condition = "input.degree >= 3",
+                  condition = "input.degree >= 3 & input.degree <= 5 ",
                   radioButtons(
                     "der3",
                     "Third Derivative:",
@@ -282,10 +290,11 @@ ui <- fluidPage(
                     inline = TRUE
                   )
                 )
-              ),
+              )
+              ), # end constraints panel
 
               conditionalPanel(
-                condition = "input.constraint_mode == 'region'",
+                condition = "input.constraint_mode == 'region' && input.degree<6",
                 div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "1. Click 'Select'"),
                 div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "2. Select a region on the plot"),
                 div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. X min/max fields are updated"),
@@ -315,20 +324,24 @@ ui <- fluidPage(
                   6, numericInput("region_xmax", "X max:", value = 0.6, step = 0.05)
                 )),
 
-                radioButtons(
+                conditionalPanel(
+                  condition = "input.degree<5",
+                  radioButtons(
                   "region_monot",
                   "Monotonicity:",
                   choices = c("x" = "0", "up" = "1", "down" = "-1"),
                   selected = "0",
                   inline = TRUE
-                ),
+                )),
+                conditionalPanel(
+                  condition = "input.degree>1 && input.degree<6",
                 radioButtons(
                   "region_conv",
                   "Convexity:",
                   choices = c("x" = "0", "U" = "1", "n" = "-1"),
                   selected = "0",
                   inline = TRUE
-                ),
+                )),
                 conditionalPanel(
                   condition = "input.degree >= 3",
                   radioButtons(
@@ -392,7 +405,8 @@ ui <- fluidPage(
             column(6, h5("List of knots"),
               verbatimTextOutput("knots_compact", placeholder = TRUE),
               h5("Coefficients on the Bspline Basis"),
-              verbatimTextOutput("coeff_list", placeholder = TRUE))
+              verbatimTextOutput("coeff_list", placeholder = TRUE)
+              )
 
           ),
 
@@ -963,7 +977,7 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
   observeEvent(event_data("plotly_selected", source = "plot"), {
     if (input$constraint_mode == "region" && values$selecting_region) {
       selected <- event_data("plotly_selected", source = "plot")
-      if (!is.null(selected) && nrow(selected) > 0) {
+      if (!is.null(selected)) if( nrow(selected) > 0) {
         x_vals <- selected$x
         if (length(x_vals) >= 2) {
           xmin <- min(x_vals, na.rm = TRUE)
@@ -1541,7 +1555,8 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
    #===INFO==GENERAL
     output$fit_info <- renderPrint(
         {tryCatch({
-        cat("Solver: ",input$solver,"\n")
+        cat("Solver: ",input$solver," mean result value:",(get_parameters(values$fitted)$result$value)/length(values$xtab), "\n")
+
         cat("Degree:", if (!is.na(values$degree))
             values$degree
             else
@@ -1703,16 +1718,17 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
                         length.out = 300)
 
           # Évaluer la dérivée : callable b-spline
-          # exception pour degree 1 et 1 seul intervalle
+
           param<-get_parameters(deriv_spline)
-          version<-packageVersion("BsplineQuantReg")
-          exception025<-(param$degree==0 && length(values$knot)==2) && (version<"0.2.6")
-          if (exception025)
-            {
-            #showNotification("Exception025", type="warning")
-            y_vals=rep(param$coeff,length(x_vals))}
-          else
-            y_vals <- deriv_spline(x_vals)
+          # exception pour degree 1 et 1 seul intervalle
+          #version<-packageVersion("BsplineQuantReg")
+          #exception025<-(param$degree==0 && length(values$knot)==2) && (version<"0.2.6")
+          #if (exception025)
+            #{
+          #  #showNotification("Exception025", type="warning")
+          #  y_vals=rep(param$coeff,length(x_vals))}
+          #else
+          y_vals <- deriv_spline(x_vals)
 
           colors <- c("blue", "darkgreen", "purple")
           deriv_names <- c("1st derivative", "2nd derivative", "3rd derivative")
@@ -1731,10 +1747,13 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
               yaxis = list(title = paste0("f^(", der, ")(x)")),
               hovermode = "closest"
             )
-        })
-      })
-    }
-  })
+
+        }) #end renderplotly
+      }) # end local
+    } # end for
+      }) # end observe
+
+
 
   # ============================================================================
   # AFFICHAGE DES COEFFICIENTS DES DÉRIVÉES
@@ -1766,7 +1785,7 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
           knot <- deriv_pp$knot
 
           cat("Derivative order:", der, "\n")
-          cat("Degree:", deriv_pp$degree, "\n")
+          cat("Degree:", values$degree-der, "\n")
           cat("Number of intervals:", length(knot) - 1, "\n\n")
 
           if (is.matrix(coeff_matrix)) {
@@ -1787,9 +1806,10 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
                                   digits = 4)
             cat(poly_str, "\n")
           }
-        })
+        } )
       })
     }
+
   })
 
 ####============DATA
@@ -2133,37 +2153,37 @@ observeEvent(c(input$auto_knot_count,input$generate_custom), {
 
     # Utiliser view_basis
     x_values<-basis_values$x_eval
-    version<-packageVersion("BsplineQuantReg")
-      d<-values$degree-basis_values$derivative
-    exception025<-(d==0 && length(values$knot)==2) && (version<"0.2.6")
-      if (exception025)
-      {
-      coeff<-as.vector(basis_values$der_basis_obj$base[,2,])
-      y_values<-array(0,dim=c(2,length(x_values)))
-      y_values[1,]<-rep(coeff[1],length(x_values))
-      y_values[2,]<-rep(coeff[2],length(x_values))
+    #  version<-packageVersion("BsplineQuantReg")
+    #  d<-values$degree-basis_values$derivative
+    #exception025<-(d==0 && length(values$knot)==2) && (version<"0.2.6")
+    #  if (exception025)
+    #  {
+    #  coeff<-as.vector(basis_values$der_basis_obj$base[,2,])
+    #  y_values<-array(0,dim=c(2,length(x_values)))
+    #  y_values[1,]<-rep(coeff[1],length(x_values))
+    #  y_values[2,]<-rep(coeff[2],length(x_values))
 
-      matplot(
-        x_values,
-        t(y_values),
-        type = "l",
-        lwd = 1.5,
-        xlab = "x",
-        ylab = "Basis values",
-        lty = 1
-      )
-
-      if (input$basis_show_knots) {
-        abline(
-          v = basis_values$der_basis_obj$knot,
-          col = "red",
-          lty = 2,
-          lwd = 0.8
-        )
-        grid(col = "gray90", lty = 1)
-      }
-      }
-   else
+    #  matplot(
+    #    x_values,
+    #    t(y_values),
+    #    type = "l",
+    #    lwd = 1.5,
+    #    xlab = "x",
+    #    ylab = "Basis values",
+    #    lty = 1
+    #  )
+      #
+      #if (input$basis_show_knots) {
+      #  abline(
+      #    v = basis_values$der_basis_obj$knot,
+      #    col = "red",
+      #    lty = 2,
+      #    lwd = 0.8
+    #    )
+    #    grid(col = "gray90", lty = 1)
+      #}
+     # }
+   #else
     view_basis(
       basis_values$der_basis_obj,
       x_values = x_values,
@@ -2252,7 +2272,7 @@ observeEvent(input$dec_multiplicity, {
 
 #update knots multiplicities
 observeEvent(input$degree,{
-  if (is.numeric(input$degree)) values$degree<-max(input$degree,1)
+  if (is.numeric(input$degree)) values$degree<-max(input$degree,0)
   if (!is.null(values$knot_multiplicity)){
   kn<-length(values$knot)-1
   degree<-values$degree

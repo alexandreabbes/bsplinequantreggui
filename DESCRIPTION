@@ -1,7 +1,7 @@
 Package: BsplineQuantRegGui
 Type: Package
 Title: Interactive 'Shiny' Interface for 'BsplineQuantReg'
-Version: 0.2.2
+Version: 0.2.3
 Language: en-GB
 Date: 2026-07-28
 Authors@R: person("Alexandre", "Abbes", email = "alexandre.abbes@proton.me", role = c("aut", "cre"))
@@ -9,6 +9,7 @@ Description: A user-friendly interactive Shiny interface for the 'BsplineQuantRe
     based on the method described in Abbes (2025). Almost all parameters of the main function 'quantile_spline()' can be tuned. Features include interactive
     knot placement, per-region constraint specification, 'CSV' data import, direct demo access, reproducible R code generation, and solver selection.
     The version 0.2.2 handles knots multiplicity, Bspline basis visualisation, mean-square regression, pp form visualisation under human readable form, in local or canonical bases,  
+    The version 0.2.3 hadles regession with spline of any degree, with constraints implemented for degrees 0..5.
     The GUI provides two modes, basic (compatible with 'BsplineQuantReg' >= 0.2.2) 
     and advanced (requires 'BsplineQuantReg' >= 0.2.5 for stable multiplicity features).
     This GUI an improved version of the 'Python Tk' version of 'BsplineQuantRegPy'.
