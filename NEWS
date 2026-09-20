@@ -1,12 +1,14 @@
-#BsplineQuantRegGui 0.2.3
+#BsplineQuantRegGui 0.2.3beta
 ### todo:
 -testing of the gui.
 -adapt the versions of core to the version of app, allow 0.2.2 version for basic
 and require 0.2.6 for advanced.
+- update readme
+
 
 ###changes:
 -add regression for degree 0 and more than 5.
--adapt conditional display of constraits in the respect
+-adapt conditional display of constraints to the degree
 
 ### fixes:
 - display degree of derivatives.
