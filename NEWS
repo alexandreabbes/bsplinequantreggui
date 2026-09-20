@@ -1,19 +1,23 @@
-#BsplineQuantRegGui 0.2.3beta
+#BsplineQuantRegGui 0.2.3
 ### todo:
--testing of the gui.
+-more testing of the gui.
 -adapt the versions of core to the version of app, allow 0.2.2 version for basic
 and require 0.2.6 for advanced.
 - update readme
 
 
 ###changes:
+-add boutons to set auto knots, change generate custom.
 -add regression for degree 0 and more than 5.
--adapt conditional display of constraints to the degree
+-adapt conditional display of constraints to the degree.
+-refactorise the code : most functions of app.R are externalised.
+-allow to use the old version (more simple) of the app with previous versions of the core.
+
 
 ### fixes:
 - display degree of derivatives.
 - remove condition exeption for version 2.6 of core.
-
+- adding/removing knots confusions
 
 #BsplineQuantRegGui 0.2.2
 ### Fixes :
