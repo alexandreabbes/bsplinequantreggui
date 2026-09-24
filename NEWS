@@ -7,6 +7,7 @@ and require 0.2.6 for advanced.
 
 
 ###changes:
+-generate custom function data does no more trigers auto knots.
 -add boutons to set auto knots, change generate custom.
 -add regression for degree 0 and more than 5.
 -adapt conditional display of constraints to the degree.

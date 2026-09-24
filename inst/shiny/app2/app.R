@@ -704,7 +704,7 @@ observeEvent(input$clear_manual_knots,
 # update the knot list on particular events
 
 
-observeEvent(c(input$generate_custom,input$set_auto_knots),
+observeEvent(input$set_auto_knots,
                update_auto_knots(),
              ignoreNULL = TRUE, ignoreInit = FALSE)
 
