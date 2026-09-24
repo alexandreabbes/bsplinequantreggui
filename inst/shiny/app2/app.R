@@ -1530,10 +1530,10 @@ update_region_fields <- function(xmin, xmax) {
 # ============  source all functions =========================
 #=============================================================
 
-source('../../../R/knot_mult_const.R',local=TRUE)
-source('../../../R/runregression_export_r.R',local=TRUE)
-source('../../../R/basis_derivative.R',local=TRUE)
-source('../../../R/data_generate_import.R',local=TRUE)
+source('./knot_mult_const.R',local=TRUE)
+source('./runregression_export_r.R',local=TRUE)
+source('./basis_derivative.R',local=TRUE)
+source('./data_generate_import.R',local=TRUE)
 
 #=============================================================
 #                     END OF FUNCTION SECTION
