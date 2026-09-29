@@ -263,7 +263,56 @@ ui <- fluidPage(
                      )
 
                    ),
-                   ),
+                   ), #end modify mult
+                   #=====================================================
+                   # ============ AFFICHAGE DES COEFFICIENTS ============
+
+                   fluidRow(
+                     column(
+                       12,
+                       checkboxInput("show_coefficients","Bspline basis polynomial coefficients display:",TRUE),
+                       conditionalPanel(
+                         condition = "input.show_coefficients",
+                         radioButtons(
+                           "local","",
+                           choices = c("Canonical (1, x, x²...)" = "FALSE",
+                                       "Local ((x-a)^i) for each knot a" = "TRUE"),
+                           selected = "TRUE",
+                           inline = TRUE
+                         ),
+                         verbatimTextOutput("bspline_coeff", placeholder = TRUE)
+                       )
+                     )) ,
+
+
+
+                   # ============================================================
+                   # SECTION 3 : DÉRIVÉES SUCCESSIVES
+                   # ============================================================
+
+                   fluidRow(
+                     column(12,
+                            h4("Derivatives", class = "text-primary"),
+
+                            # Boutons radio pour sélectionner les dérivées à afficher
+                            radioButtons(
+                              "deriv_display",
+                              "Display derivatives:",
+                              choices = c(
+                                "None" = "none",
+                                "1st derivative" = "1",
+                                "1st & 2nd" = "2",
+                                "1st, 2nd & 3rd" = "3"
+                              ),
+                              selected = "none",
+                              inline = TRUE
+                            )
+                     ),
+                     uiOutput("derivatives_ui") #end tab derivatives
+
+
+
+            )), #end central panel
 
             column(
               3,
@@ -409,66 +458,13 @@ ui <- fluidPage(
                 actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")),
                 column(3,actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),br(),
                 actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger")
-              )))),
-
-          br(),
-
-
-
-
-
-#=====================================================
-# ============ AFFICHAGE DES COEFFICIENTS ============
-
-fluidRow(
-  column(
-    12,
-    checkboxInput("show_coefficients","Bspline basis polynomial coefficients display:",TRUE),
-    conditionalPanel(
-      condition = "input.show_coefficients",
-    radioButtons(
-      "local","",
-      choices = c("Canonical (1, x, x²...)" = "FALSE",
-                  "Local ((x-a)^i) for each knot a" = "TRUE"),
-      selected = "TRUE",
-      inline = TRUE
-    ),
-    verbatimTextOutput("bspline_coeff", placeholder = TRUE)
-  )
-))
-,
-
-
-
-# ============================================================
-# SECTION 3 : DÉRIVÉES SUCCESSIVES
-# ============================================================
-
-fluidRow(
-  column(12,
-         h4("Derivatives", class = "text-primary"),
-
-         # Boutons radio pour sélectionner les dérivées à afficher
-         radioButtons(
-           "deriv_display",
-           "Display derivatives:",
-           choices = c(
-             "None" = "none",
-             "1st derivative" = "1",
-             "1st & 2nd" = "2",
-             "1st, 2nd & 3rd" = "3"
-           ),
-           selected = "none",
-           inline = TRUE
-         )
-  ),
-uiOutput("derivatives_ui"))
-
+              )))
+          ,
 
 
     ),#end tab visualisation
 
-# )#end tab derivatives
+
 #
 
         tabPanel(
