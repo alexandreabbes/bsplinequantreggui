@@ -4,7 +4,7 @@
 -adapt the versions of core to the version of app, allow 0.2.2 version for basic
 and require 0.2.6 for advanced.
 - update readme
-
+- Change R code and write the custom function and give the seed.
 
 ###changes:
 -generate custom function data does no more trigers auto knots.

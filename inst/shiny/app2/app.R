@@ -298,7 +298,11 @@ ui <- fluidPage(
                 condition = "input.constraint_mode == 'region' && input.degree<6",
                 div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "1. Click 'Select'"),
                 div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "2. Select a region on the plot"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. X min/max fields are updated"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "X min/max fields are updated"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. Select constraints"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "4. Click 'Add reggion'"),
+                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "5. Last selected region can \n be modified and updated"),
+
 
                 fluidRow(column(
                   6,
@@ -312,7 +316,7 @@ ui <- fluidPage(
                   6,
                   actionButton(
                     "clear_regions",
-                    "Cancel region",
+                    "Cancel regions",
                     class = "btn-sm btn-danger",
                     style = "width:100%;"
                   )
@@ -403,7 +407,7 @@ ui <- fluidPage(
           # Information (unique)
           fluidRow(
             column(6, h5("Information"), verbatimTextOutput("fit_info")),
-            column(6, h5("List of knots"),
+            column(6, h5("List of knots / multiplicities"),
               verbatimTextOutput("knots_compact", placeholder = TRUE),
               h5("Coefficients on the Bspline Basis"),
               verbatimTextOutput("coeff_list", placeholder = TRUE)
@@ -471,9 +475,9 @@ uiOutput("derivatives_ui"))
           "Data",
           br(),
           fluidRow(
-            column(6, h4("Summary"), verbatimTextOutput("data_summary"))
+            column(6, h4("Summary"), verbatimTextOutput("data_summary")),
             #,
-            #column(6, h4("Knots"), verbatimTextOutput("knots_info"))
+            column(6, h4("Knots"), verbatimTextOutput("knots_info"))
           ),
           br(),
           DTOutput("data_table")
@@ -491,6 +495,7 @@ uiOutput("derivatives_ui"))
             h5("Instructions"),
             p("1. Mode 'Per region'"),
             p("2. 'Select' a rectangle on the plot"),
+            p(" Xmin and Xmax fields are updated "),
             p("3. Select constraints"),
             p("4. 'Add region'")
           ))
@@ -666,6 +671,7 @@ server <- function(input, output, session) {
 
 
 
+
 observeEvent(input$add_knot_mode, {
     values$adding_knot <- !values$adding_knot
     if (values$adding_knot) {
@@ -675,18 +681,6 @@ observeEvent(input$add_knot_mode, {
       updateActionButton(session, "add_knot_mode", label = "Add knot")
     }
 })
-
-
-observeEvent( event_data("plotly_click", source = "plot"),
-              {
-                if (values$adding_knot) {
-                  click <- event_data("plotly_click", source = "plot")
-                  if (!is.null(click) && !is.null(values$xtab))
-                  x<-click$x
-                  add_knot(x)
-                }
-              }
-              )
 
 
 observeEvent(input$remove_knot,
@@ -709,107 +703,112 @@ observeEvent(input$set_auto_knots,
              ignoreNULL = TRUE, ignoreInit = FALSE)
 
 #### Affiche des noeuds
+output$knots_info <- renderPrint({
+  if (is.null(values$knot)) {
+    cat("No knots")
+  } else {
+    cat( length(values$knot),"Knots:")
+    cat(paste(round(values$knot, 4),collapse="|"),"\n")
+    cat("Multiplicities:",paste(values$knot_multiplicity,collapse="|") )
+  }
+})
+
 output$knots_compact <- renderPrint({
     if (!is.null(values$knot) && length(values$knot) > 0) {
       k <- round(values$knot, 3)
+      m<-values$knot_multiplicity
       if (length(k) <= 15) {
-        cat(paste(k, collapse = ", "))
+        cat("knt: ",paste(k, collapse = ", "),"\n")
+        cat("mlt: ",paste(m, collapse = ", "))
       } else {
-        cat(paste(c(head(k, 4), "...", tail(k, 4)), collapse = ", "))
+        cat("knt: ",paste(c(head(k, 4), "...", tail(k, 4)), collapse = ", "),"\n")
+        cat("mult: ",paste(c(head(m, 4), "...", tail(m, 4)), collapse = ", "),"\n")
       }
     } else {
       cat("(none)")
     }
   })
 
-  #======================================================
-  # ============ REGION SELECTION MANAGEMENT ============
-  # =====================================================
+#####################################################
+######## plotly_clicks centralised ##################
+#####################################################
 
+# Reactive value pour le nœud sélectionné
+selected_knot <- reactiveVal(NULL)
+# Observer les clics sur le plot principal
+#click<-reactiveVal(NULL)
+
+observeEvent(event_data("plotly_click", source = "plot"),
+             {click <- event_data("plotly_click", source = "plot")
+             if (!is.null(click))
+               {
+             showNotification(cat("add knot",values$adding_knot),type='message')
+             if (!is.null(click) && !is.null(values$knot)) {
+               x <- click$x
+               idx<-select_knot(x)
+               selected_knot(idx)
+             }
+             if (values$adding_knot)
+               {
+                 x<-click$x
+               add_knot(x)
+               showNotification(cat('Clicked on ',x),type="message")
+             }
+            }
+             }
+)
+
+
+# ======================================================
+# ============ REGION SELECTION MANAGEMENT ============
+# =====================================================
+
+
+# 1. Activer le mode sélection
 observeEvent(input$start_selection, {
-    values$selecting_region <- !values$selecting_region
-    if (values$selecting_region) {
-      showNotification("Select a region on the plot (rectangle)", type = "message")
-      updateActionButton(session, "start_selection", label = "Stop")
-    } else {
-      updateActionButton(session, "start_selection", label = "Select")
-    }
-  })
+  values$selecting_region <- !values$selecting_region
+  if (values$selecting_region) {
+    showNotification("Draw a rectangle on the plot to create a new region",
+                     type = "message")
+    updateActionButton(session, "start_selection", label = "Stop")
+    updateActionButton(session, "add_knot_mode",  label = "Add knot")
+  } else {
+    updateActionButton(session, "start_selection", label = "Select")
+  }
+})
 
-observeEvent(event_data("plotly_selected", source = "plot"), {
-    if (input$constraint_mode == "region" && values$selecting_region) {
-      selected <- event_data("plotly_selected", source = "plot")
-      if (!is.null(selected)) if( nrow(selected) > 0) {
-        x_vals <- selected$x
-        if (length(x_vals) >= 2) {
-          xmin <- min(x_vals, na.rm = TRUE)
-          xmax <- max(x_vals, na.rm = TRUE)
-          updateNumericInput(session, "region_xmin", value = round(xmin, 3))
-          updateNumericInput(session, "region_xmax", value = round(xmax, 3))
-          values$selecting_region <- FALSE
-          updateActionButton(session, "start_selection", label = "Select")
-          showNotification(paste(
-            "Region selected: [",
-            round(xmin, 3),
-            ", ",
-            round(xmax, 3),
-            "]"
-          ),
-          type = "message")
-        }
-      }
-    }
-  })
+# 2. Sélection rectangulaire : CRÉER une nouvelle région -> plotly_click centralised
+
+observeEvent(event_data("plotly_selected", source = "plot"),
+             {
+               if (input$constraint_mode == "region" && values$selecting_region)
+               {selected <- event_data("plotly_selected", source = "plot")
+               if (!is.null(selected) && nrow(selected) > 0) {
+                 x_vals <- selected$x
+                 create_new_region(x_vals)
+               }
+               }
+             })
+
+# 4. Ajouter une région
+observeEvent(input$add_region, add_region() )
 
 
-observeEvent(input$add_region, {
-    req(values$xtab, values$knot)
-    xmin <- input$region_xmin
-    xmax <- input$region_xmax
-    if (xmin >= xmax) {
-      showNotification("X min < X max", type = "warning")
-      return()
-    }
-    values$region_id <- values$region_id + 1
-    region <- list(
-      id = values$region_id,
-      xmin = xmin,
-      xmax = xmax,
-      monot = as.numeric(input$region_monot),
-      conv = as.numeric(input$region_conv),
-      der3 = as.numeric(input$region_der3)
-    )
-    values$regions <- c(values$regions, list(region))
-    values$selected_region_id <- NULL
-    showNotification(paste("Region added: [", round(xmin, 3), ", ", round(xmax, 3), "]"), type = "message")
-  })
 
-  # observeEvent(input$update_region, {
-  #   if (!is.null(values$selected_region_id)) {
-  #     idx <- which(sapply(values$regions, function(r)
-  #       r$id == values$selected_region_id))
-  #     if (length(idx) > 0) {
-  #       values$regions[[idx]]$xmin <- input$region_xmin
-  #       values$regions[[idx]]$xmax <- input$region_xmax
-  #       values$regions[[idx]]$monot <- as.numeric(input$region_monot)
-  #       values$regions[[idx]]$conv <- as.numeric(input$region_conv)
-  #       values$regions[[idx]]$der3 <- as.numeric(input$region_der3)
-  #       showNotification("Region updated", type = "message")
-  #     }
-  #   } else {
-  #     showNotification("Select a region first", type = "warning")
-  #   }
-  # })
+observeEvent(input$update_region, update_region())
 
-  observeEvent(input$clear_regions, {
+  # ============ FIELD UPDATE FUNCTION ============
+
+
+observeEvent(input$clear_regions, {
     values$regions <- c()
     values$region_id <- 0
     values$selected_region_id <- NULL
     showNotification("All regions cleared", type = "message")
   })
 
-
-  observeEvent(input$delete_region, {
+#region management in regions tab
+observeEvent(input$delete_region, {
     id <- as.numeric(input$delete_region)
     if (is.na(id)) {
       showNotification("Invalid ID", type = "warning")
@@ -824,22 +823,24 @@ observeEvent(input$add_region, {
     showNotification(paste("Region", id, "deleted"), type = "message")
   }, ignoreNULL = TRUE)
 
+  #========================================
+  #  import data files ===================
+  #========================================
 
 
-  observeEvent(input$load_csv, load_csv() )
-
-
-
-  observeEvent(input$load_excel, load_excel() )
-
-
-  # ============ REGRESSION ============
-
-  observeEvent(input$run, run_regression())
+observeEvent(input$load_csv, load_csv() )
 
 
 
-  # ============ VISUALIZATION ============
+observeEvent(input$load_excel, load_excel() )
+
+  #********************************************
+  # ============ REGRESSION : core ============
+  #============================================
+observeEvent(input$run, run_regression())
+
+
+# ============ VISUALIZATION ============
 output$spline_plot <- renderPlotly({
     req(values$xtab, values$ytab)
 
@@ -869,7 +870,8 @@ output$spline_plot <- renderPlotly({
                         "2" = "orange",
                         "3" = "red",
                         "4" = "darkred",
-                        "gray")
+                        "5" = "gray",
+                        "6" = "green")
 
         # Symbole selon multiplicité
         symbol <- switch(as.character(mult),
@@ -877,7 +879,8 @@ output$spline_plot <- renderPlotly({
                          "2" = "square",
                          "3" = "diamond",
                          "4" = "cross",
-                         "circle")
+                         "5" = "circle",
+                         "6" = "square")
 
         p <- p %>% add_trace(
           x = values$knot[i],
@@ -999,29 +1002,6 @@ output$spline_plot <- renderPlotly({
     p
   })
 
-  # ============ KNOT SELECTION FROM VISUALIZATION ============
-
-  # Reactive value pour le nœud sélectionné
-  selected_knot <- reactiveVal(NULL)
-
-  # Observer les clics sur le plot principal
-
-  observeEvent(event_data("plotly_click", source = "plot"),
-               {
-    click <- event_data("plotly_click", source = "plot")
-
-    if (!is.null(click) && !is.null(values$knot)) {
-      x <- click$x
-      idx<-select_knot(x)
-      selected_knot(idx)
-
-    }
-               }
-    )
-
-
-
-
   # Afficher le nœud sélectionné
   output$selected_knot_display <- renderPrint({
     idx <- selected_knot()
@@ -1033,29 +1013,6 @@ output$spline_plot <- renderPlotly({
       cat("Click on a knot in the plot to select it.")
     }
   })
-    # ============ REGION SELECTION BY CLICK ============
-
-  observeEvent(event_data("plotly_click", source = "plot"), {
-      if (!values$selecting_region && input$constraint_mode == "region") {
-        click <- event_data("plotly_click", source = "plot")
-        if (!is.null(click)) {
-          x <- click$x
-          for (region in values$regions) {
-            if (x >= region$xmin && x <= region$xmax) {
-              values$selected_region_id <- region$id
-              update_region_fields(region$xmin, region$xmax)
-              updateRadioButtons(session, "region_monot", selected = as.character(region$monot))
-              updateRadioButtons(session, "region_conv", selected = as.character(region$conv))
-              updateRadioButtons(session, "region_der3", selected = as.character(region$der3))
-              showNotification(paste("Region", region$id, "selected"), type = "message")
-              break
-            }
-          }
-        }
-      }
-
-    })
-
 
 
     # ============ OUTPUTS ============
@@ -1244,14 +1201,7 @@ output$regions_list_ui <- renderUI({
     }
   })
 
-  output$knots_info <- renderPrint({
-    if (is.null(values$knot)) {
-      cat("No knots")
-    } else {
-      cat("Knots:", length(values$knot), "\n")
-      print(round(values$knot, 4))
-    }
-  })
+
 
   output$data_table <- renderDT({
     if (is.null(values$xtab))
@@ -1512,18 +1462,6 @@ get_sym <- function(val, symbols) {
   return(symbols[val + 2])
 }
 
-# ============ FIELD UPDATE FUNCTION ============
-update_region_fields <- function(xmin, xmax) {
-  if (is.null(xmin) ||
-      is.null(xmax) || is.na(xmin) || is.na(xmax))
-    return()
-  if (xmin >= xmax) {
-    showNotification("X min must be less than X max", type = "warning")
-    return()
-  }
-  updateNumericInput(session, "region_xmin", value = round(xmin, 3))
-  updateNumericInput(session, "region_xmax", value = round(xmax, 3))
-}
 
 
 #=============================================================
@@ -1534,6 +1472,7 @@ source('./knot_mult_const.R',local=TRUE)
 source('./runregression_export_r.R',local=TRUE)
 source('./basis_derivative.R',local=TRUE)
 source('./data_generate_import.R',local=TRUE)
+source('./regions.R',local=TRUE)
 
 #=============================================================
 #                     END OF FUNCTION SECTION

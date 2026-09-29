@@ -55,17 +55,27 @@ clear_manual_knot<-function()
     return()}
   else{
     tn<-values$knot
+    mn<-values$manual_knot
     knot_mult<-values$knot_multiplicity
     idm<-c()
-    index=1:length(tn)
+    if (length(mn)==length(tn)) #special case only manual knots
+      {
+      values$knot<-c()
+      values$knot_multiplicity<-c()
+      }
+    else
+    {index=1:length(tn)
     for (k in (values$manual_knot)){
       idm<-c(idm,index[k==tn])}
 
     #remove values of index idm:
     values$knot<-tn[-idm]
     values$knot_multiplicity<-knot_mult[-idm]
-    values$manual_knot <- c()
+    values$knot_multiplicity[1]<-values$degree+1
+    values$knot_multiplicity[length(values$knot)]<-values$degree+1
+    }
 
+    values$manual_knot <- c()
     showNotification("manual knots reset", type = "message")
   }}
 
@@ -88,14 +98,13 @@ select_knot<-function(x)
                      type = "message", duration = 2)
   } else {
     # Désélectionner si on clique ailleurs
-#    selected_knot(NULL)
+      selected_knot(NULL)
     return(NULL)
   }
 }
 
 add_knot<-function(x)
 { #this function is called only if  click!=NULL and xtab!=NULL
-
       u<-abs(values$knot - x)
       if (any(u < 1e-6))
          {
@@ -107,43 +116,40 @@ add_knot<-function(x)
         tn<-values$knot
         ln<-if (!is.null(tn)) length(tn) else 0
         tn_m<-values$manual_knot
-        mn<-if (!is.null(tn_m)) length(tn_m) else 0
-
-
-        manual_mult<-values$manual_knot_multiplicity
+        mn<-length(tn_m)
 
         knot_mult<-values$knot_multiplicity
 
-        idx<-length(tn[tn<x])+1 #id of the added knot
-        idx_m<-length(tn_m[tn_m<x])+1 #id in manual knots list
+        idx  <-length(tn[tn<x])+1        #id of the newly added knot
+        idx_m<-length(tn_m[tn_m<x])+1    #id in manual knots list
         #update multiplicity: add a new one
+        if (ln<2) {mult<-values$degree+1
+        knot_mult<-c(mult,knot_mult)}
+        else{
+        if (idx==1) # special case adding new  extreme knot
+          {mult<-values$degree+1
+          knot_mult[1]<-1
+          knot_mult<-c(mult,knot_mult)}
+        if (idx==(ln+1))
+          {
+          mult<-values$degree+1
+          knot_mult[ln]<-1
+          knot_mult<-c(knot_mult,mult)}
+          }
+        if (idx>1 && idx<(ln+1))
+          {mult<-1
+          knot_mult<-c(knot_mult[1:(idx-1)],mult,knot_mult[idx:ln])
+      }
 
-
-        if (idx==1 || idx==ln) # special case adding new  extreme knot
-          mult<-values$degree+1    else       mult<-1
-
-        if (ln>1){
-          # set the extreme mult to 1 if replaced by the new knot
-            if (idx==1){knot_mult[1]<-1}
-            if (idx==ln+1){knot_mult[ln]<-1}
-        }
-
-
-
-      knot_mult<-c(knot_mult[1:(idx-1)],mult,knot_mult[idx:ln])
       tn_m<-sort(c(tn_m,x))
       tn<-sort(c(tn,x))
 
       values$manual_knot<-tn_m
       values$knot<-tn
       values$knot_multiplicity<-knot_mult
-
       showNotification(paste("New knot N",idx,"added at x =", round(x, 3)), type = "message")
-
-
     }
 }
-
 
 
 remove_knot<-function(idx)
@@ -232,6 +238,25 @@ update_knot_multiplicity <- function(idx, new_mult) {
                    type = "message")
 }
 
+#update knots multiplicities
+update_knot_multiplicity_1<-function()
+{
+  if (is.numeric(input$degree)) values$degree<-max(input$degree,0)
+  if (!is.null(values$knot_multiplicity)){
+    kn<-length(values$knot)-1
+    degree<-values$degree
+    values$knot_multiplicity[1]<-degree+1
+    values$knot_multiplicity[kn+1]<-degree+1
+    #limit intern multiplicities
+    for (i in 2:kn){
+      if (values$knot_multiplicity[i]>(degree+1))
+      {
+        values$knot_multiplicity[i]<-degree+1
+      }}
+  }
+
+}
+
 
 inc_multiplicity<-function()
 {
@@ -267,24 +292,7 @@ dec_multiplicity<-function()
   showNotification(paste("Decreased multiplicity of knot", idx), type = "message")
 }
 
-#update knots multiplicities
-update_knot_multiplicity_1<-function()
-{
-  if (is.numeric(input$degree)) values$degree<-max(input$degree,0)
-  if (!is.null(values$knot_multiplicity)){
-    kn<-length(values$knot)-1
-    degree<-values$degree
-    values$knot_multiplicity[1]<-degree+1
-    values$knot_multiplicity[kn+1]<-degree+1
-    #limit intern multiplicities
-    for (i in 2:kn){
-      if (values$knot_multiplicity[i]>(degree+1))
-      {
-        values$knot_multiplicity[i]<-degree+1
-      }}
-  }
 
-}
 
 
 #
@@ -350,7 +358,7 @@ build_constraints <- function() {
 
     for (i in 2:kn)
     {
-      mult_monot<-c(mult_monot,rep(monot[i],values$knot_multiplicity[i]))
+      mult_monot<-c(mult_monot, rep( monot[i] , values$knot_multiplicity[i] ))
       mult_conv<-c(mult_conv,rep(conv[i],values$knot_multiplicity[i]))
       mult_der3<-c(mult_der3, rep(der3[i],values$knot_multiplicity[i]))
     }
