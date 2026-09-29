@@ -8,7 +8,6 @@
 
 library(BsplineQuantReg)
 
-
 library(shiny)
 library(shinyjs)
 library(ECOSolveR)
@@ -20,6 +19,10 @@ library(shinythemes)
 library(png)
 
 # UI ----------------------------------------------------------------------
+
+#source( "./ui_sidetab.R", local = TRUE)
+#source("ui_visualisation1.R", local = TRUE)
+#source("ui_visualisation2.R", local = TRUE)
 
 ui <- fluidPage(
   theme = shinytheme("flatly"),
@@ -51,6 +54,7 @@ ui <- fluidPage(
     ),
     windowTitle = "BsplineQuantRegGui"
   ),
+
   #themeSelector(),
   div(
     style = "position: absolute; top: 10px; right: 20px; z-index: 1000;",
@@ -66,406 +70,20 @@ ui <- fluidPage(
     h5("Select Theme:"),
     themeSelector()
   ),
-  sidebarLayout(
-    sidebarPanel(
-      width = 3,
-      style = "background-color: #f8f9fa; border-radius: 5px;",
 
-      # ============ 1. DATA ============
-      h3("1. Data", class = "text-primary"),
+sidebarLayout(
 
-      div(
-        style = "display: flex; flex-wrap: wrap; gap: 5px;",
-        actionButton("test_data", "Test", class = "btn-sm btn-success", style = " background-color:#000000;"),
-        actionButton("temp_data", "Temp", class = "btn-sm btn-warning", style = "background-color:#FF0000;"),
-        actionButton("load_csv", "CSV", class = "btn-sm btn-info", style = "background-color:#10AA10;")
-      ),
-      br(),
-
-      h5("Interval:"),
-      h6(fluidRow(
-        column(
-          4,
-          numericInput("data_xmin", "X min:", value = 0, step = 0.05),
-          style = "padding-right: 1px;"
-        ),
-        column(
-          4,
-          numericInput("data_xmax", "X max:", value = 1, step = 0.05),
-          style = "padding-right: 1px;"
-        ),
-        column(
-          4,
-          numericInput(
-            "n_points",
-            "n:",
-            value = 100,
-            min = 10,
-            max = 1000
-          ),
-          style = "padding-right: 1px;"
-        )
-      )),
-
-
-      fluidRow(column(
-        12,
-        textInput("custom_func",
-                  actionButton("generate_custom", "Generate", class = "btn-sm btn-primary"),
-                  value = "2*x + 0.5*sin(6*pi*x) + 0.2*rnorm(n)")
-      ), ),
-
-
-
-      hr(),
-
-      # ============ 2. SPLINE ============
-      h3("2. Spline", class = "text-primary"),
-
-      fluidRow(column(
-        6, numericInput(
-          "degree",
-
-          h6("Degree:"),
-          value = 3,
-          min = 0#,
-#          max = 4
-        )
-      ), column(
-        6,
-        numericInput(
-          "auto_knot_count",
-          actionButton("set_auto_knots", "set auto knots", class = "btn-sm btn-primary"),
-          value = 10,
-          min = 2,
-          max = 30
-        ),
-
-
-      )),
-
-      br(),
-
-      fluidRow(sliderInput(
-        "tau",
-        "Tau:",
-        min = 0.05,
-        max = 0.95,
-        value = 0.5
-      )),
-      br(),
-      fluidRow(h6(column(6, selectInput("solver","Solver:",
-          choices = c("ECOS", "SCS","CLARABEL", "HIGHS", "OSQP", "GUROBI") ) ),
-        column(6,selectInput("type_reg","Type of Regr.",
-                      choices=c('quantile','mean_square') ) ))),
-      fluidRow(h6(column(
-        6, checkboxInput("verbose", "Verbose", FALSE)
-        )
-
-      )),
-
-      hr(),
-
-      #  5. Demos" :
-
-      h3("5. Demos", class = "text-primary"),
-      div(
-        style = "display: flex; flex-wrap: wrap; gap: 5px;",
-        actionButton(
-          "demo_comp",
-          "Comprehensive",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        ),
-        actionButton(
-          "demo_monot",
-          "Monotonicity Basic",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        ),
-        actionButton("demo_log", "Logistic", class = "btn-sm btn-info", style = "flex:1;"),
-        actionButton(
-          "demo_temp",
-          "Temperature",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        ),
-        actionButton(
-          "demo_temp2",
-          "Temperature2",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        ),
-        actionButton("demo_conv", "Convexity", class = "btn-sm btn-info", style = "flex:1;"),
-        actionButton("demo_degrees", "Degrees", class = "btn-sm btn-info", style = "flex:1;"),
-        actionButton(
-          "demo_der3",
-          "Third derivative",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        ),
-        actionButton(
-          "demo_derivative",
-          "Derivative",
-          class = "btn-sm btn-info",
-          style = "flex:1;"
-        )
-      ),
-
-      div(
-        style = "font-size: 11px; color: #666; text-align: center;",
-        p("BsplineQuantRegGui v0.1.0"),
-        p("BsplineQuantReg 0.2.2"),
-        p("GPL3 (c) Abbes, 2026"),
-        a("GitHub", href = "https://github.com/alexandreabbes/BsplineQuantReg", target = "_blank")
-      )
-    ),
-
-    mainPanel(
-      width = 9,
-
+    source('sidetab.R',local=TRUE)$value,
+    mainPanel(width=9,
       tabsetPanel(
         tabPanel(
           "Visualization",
-          br(),
+               source('visualisation1.R',local=TRUE)$value,
+                    #ui_visualisationtab1(),
 
+                source('visualisation2.R',local=TRUE)$value
 
-
-
-          fluidRow(
-            actionButton("add_knot_mode","Add knot",class = "btn-sm btn-primary",
-                         style = "background-color:#FFDD00; color:#000000"),
-            actionButton("clear_manual_knots", "Clear \n manual knots", class = "btn-sm btn-danger"),
-
-            actionButton("remove_knot", "Remove selected knot", class = "btn-sm btn-warning")
-          ),
-
-
-          h5("Selected Knot:"), column(4 ,verbatimTextOutput("selected_knot_display"),
-                                       conditionalPanel(
-                                         condition = "output.selected_knot_display != 'No knot selected'")),
-
-            column(9, plotlyOutput("spline_plot", height = "600px"),
-                   #MULTIPLICITY
-                   h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => minimum regularity at knot is C^{d-m}. C^{-1}:discontinuous) ",
-
-                      checkboxInput("consider_multiplicity_main","Consider Internal Multiplicities", value=TRUE )),
-                   h5("Warning: Degree=1 and any Multiplicity>1 cannot handle constraints"),
-                   column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
-                          actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
-                   # Information (unique)
-                   fluidRow(
-                     column(6, h5("Information"), verbatimTextOutput("fit_info")),
-                     column(6, h5("List of knots / multiplicities"),
-                            verbatimTextOutput("knots_compact", placeholder = TRUE),
-                            h5("Coefficients on the Bspline Basis"),
-                            verbatimTextOutput("coeff_list", placeholder = TRUE)
-                     )
-
-                   ),
-                   ), #end modify mult
-                   #=====================================================
-                   # ============ AFFICHAGE DES COEFFICIENTS ============
-
-                   fluidRow(
-                     column(
-                       12,
-                       checkboxInput("show_coefficients","Bspline basis polynomial coefficients display:",TRUE),
-                       conditionalPanel(
-                         condition = "input.show_coefficients",
-                         radioButtons(
-                           "local","",
-                           choices = c("Canonical (1, x, x²...)" = "FALSE",
-                                       "Local ((x-a)^i) for each knot a" = "TRUE"),
-                           selected = "TRUE",
-                           inline = TRUE
-                         ),
-                         verbatimTextOutput("bspline_coeff", placeholder = TRUE)
-                       )
-                     )) ,
-
-
-
-                   # ============================================================
-                   # SECTION 3 : DÉRIVÉES SUCCESSIVES
-                   # ============================================================
-
-                   fluidRow(
-                     column(12,
-                            h4("Derivatives", class = "text-primary"),
-
-                            # Boutons radio pour sélectionner les dérivées à afficher
-                            radioButtons(
-                              "deriv_display",
-                              "Display derivatives:",
-                              choices = c(
-                                "None" = "none",
-                                "1st derivative" = "1",
-                                "1st & 2nd" = "2",
-                                "1st, 2nd & 3rd" = "3"
-                              ),
-                              selected = "none",
-                              inline = TRUE
-                            )
-                     ),
-                     uiOutput("derivatives_ui") #end tab derivatives
-
-
-
-            )), #end central panel
-
-            column(
-              3,
-              conditionalPanel(
-                condition = "input.degree<6",
-
-              h3("3. Constraints", class = "text-primary"),
-              radioButtons(
-                "constraint_mode",
-                "Mode:",
-                choices = c("Uniform" = "uniform", "Per region" = "region"),
-                selected = "uniform",
-                inline = TRUE
-              ),
-
-              conditionalPanel(
-                condition = "input.constraint_mode == 'uniform'",
-                conditionalPanel(
-                  condition = "input.degree<=4",
-                radioButtons(
-                  "monot",
-                  "Monotonicity:",
-                  choices = c("x" = "0", "up" = "1", "down" = "-1"),
-                  selected = "0",
-                  inline = TRUE
-                )
-                ),
-              conditionalPanel(
-                condition = "input.degree>=2 & input.degree<=5",
-                radioButtons(
-                  "conv",
-                  "Convexity:",
-                  choices = c("x" = "0", "U" = "1", "n" = "-1"),
-                  selected = "0",
-                  inline = TRUE
-                )),
-                conditionalPanel(
-                  condition = "input.degree >= 3 & input.degree <= 5 ",
-                  radioButtons(
-                    "der3",
-                    "Third Derivative:",
-                    choices = c("x" = "0", "+" = "1", "-" = "-1"),
-                    selected = "0",
-                    inline = TRUE
-                  )
-                )
-              )
-              ), # end constraints panel
-
-              conditionalPanel(
-                condition = "input.constraint_mode == 'region' && input.degree<6",
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "1. Click 'Select'"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "2. Select a region on the plot"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "X min/max fields are updated"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. Select constraints"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "4. Click 'Add reggion'"),
-                div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "5. Last selected region can \n be modified and updated"),
-
-
-                fluidRow(column(
-                  6,
-                  actionButton(
-                    "start_selection",
-                    "Select",
-                    class = "btn-sm btn-warning",
-                    style = "width:100%;"
-                  )
-                ), column(
-                  6,
-                  actionButton(
-                    "clear_regions",
-                    "Cancel regions",
-                    class = "btn-sm btn-danger",
-                    style = "width:100%;"
-                  )
-                )),
-                br(),
-
-                fluidRow(column(
-                  6, numericInput("region_xmin", "X min:", value = 0.3, step = 0.05)
-                ), column(
-                  6, numericInput("region_xmax", "X max:", value = 0.6, step = 0.05)
-                )),
-
-                conditionalPanel(
-                  condition = "input.degree<5",
-                  radioButtons(
-                  "region_monot",
-                  "Monotonicity:",
-                  choices = c("x" = "0", "up" = "1", "down" = "-1"),
-                  selected = "0",
-                  inline = TRUE
-                )),
-                conditionalPanel(
-                  condition = "input.degree>1 && input.degree<6",
-                radioButtons(
-                  "region_conv",
-                  "Convexity:",
-                  choices = c("x" = "0", "U" = "1", "n" = "-1"),
-                  selected = "0",
-                  inline = TRUE
-                )),
-                conditionalPanel(
-                  condition = "input.degree >= 3",
-                  radioButtons(
-                    "region_der3",
-                    "Third Derivative:",
-                    choices = c("x" = "0", "+" = "1", "-" = "-1"),
-                    selected = "0",
-                    inline = TRUE
-                  )
-                ),
-
-
-                fluidRow(column(
-                  6,
-                  actionButton("add_region", "Add region", class = "btn-sm btn-primary", style = "width:100%;")
-                ), column(
-                  6,
-                  actionButton("update_region", "Update", class = "btn-sm btn-info", style = "width:100%;")
-                )),
-                br(),
-                div(id = "regions_list", style = "max-height: 120px; overflow-y: auto;")
-              ),
-
-              # ============ 4. EXECUTION ============
-
-              h3("4. Execution"),
-              h5("Color:"),
-              fluidRow(
-                column(
-                  6,
-                  colourpicker::colourInput("curve_color", NULL, value = "blue")
-                ),
-                column(6, actionButton("apply_color", "Apply", class = "btn-sm"))
-              ),
-
-              p("Curves:", textOutput("curve_count", inline = TRUE)),
-
-
-              fluidRow(column(4,actionButton("run", "Run", class = "btn-success btn-lg"),
-                br(),
-                actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")),
-                column(3,actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),br(),
-                actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger")
-              )))
-          ,
-
-
-    ),#end tab visualisation
-
-
-#
+          ),    #end tab visualisation
 
         tabPanel(
           "Data",
@@ -478,6 +96,7 @@ ui <- fluidPage(
           br(),
           DTOutput("data_table")
         ),
+
         tabPanel(
           "Regions",
           br(),
@@ -508,38 +127,8 @@ ui <- fluidPage(
           tabPanel(
               "Basis",
               br(),
-              fluidRow(
-                column(
-                  3,
+             source('basistab.R')
 
-                  hr(),
-                  h4("Derivative"),
-                  sliderInput("basis_derivative", "Derivative order:",
-                              min = 0, max = 4, value = 0, step = 1),
-                  hr(),
-                  h4("Display"),
-                  checkboxInput("basis_show_knots", "Show knots", value = TRUE),
-                  checkboxInput("basis_show_multiplicity", "Show multiplicity labels", value = TRUE),
-                  actionButton("basis_update", "Update Basis",
-                               class = "btn-primary btn-block"),
-                  checkboxInput("consider_multiplicity","Consider Interal Multiplicities",value=TRUE),
-
-
-                  hr(),
-                  h4("Knot Multiplicities"),
-                  verbatimTextOutput("multiplicity_info", placeholder = TRUE),
-
-                  hr(),
-
-                ),
-                column(
-                  9,
-                  plotOutput("basis_plot", height = "600px", click = "basis_plot_click"),
-                  br(),
-                  h5("Basis Information"),
-                  verbatimTextOutput("basis_info", placeholder = TRUE)
-                )
-              )
             ),
         tabPanel("Console", br(), fluidRow(column(
           12,
@@ -560,27 +149,18 @@ ui <- fluidPage(
                  white-space: pre-wrap; word-wrap: break-word;",
             verbatimTextOutput("console_output")
           )
-        )))
+        ))
 
 ,
 tabPanel('Demo',br(),
-         div(
-           id = "demo_area",
-           style = "display: none; margin-top: 10px;",
-           hr(),
-           h4("Demo Results:"),
-           div(
-             style = "overflow: auto; width: 100%; max-height: 1800px;",
-             plotOutput("demo_plot", height = 800)  # Hauteur par défaut, sera modifiée dynamiquement
-           ),
-           br(),
-           verbatimTextOutput("demo_output")
-         )
+source('demotab.R')
 )
       )
-    )
-  )
 )
+)))
+
+
+
 # .........................................................................
 # ......................... SERVER -----------------------------------------
 #..........................................................................
