@@ -1,16 +1,22 @@
-column(width=9,
-  actionButton("add_knot_mode","Add knot",class = "btn-sm btn-primary",
-               style = "background-color:#FFDD00; color:#000000"),
-  actionButton("clear_manual_knots", "Clear \n manual knots", class = "btn-sm btn-danger"),
+column(12,
+fluidRow(column(2,  actionButton("add_knot_mode","Add knot",class = "btn-sm btn-primary",
+               style = "background-color:#FFDD00; color:#000000")),
+         column(2,actionButton("clear_manual_knots", "Clear manual knots", class = "btn-sm btn-danger")
+                ),
+         column(2,actionButton("remove_knot", "Remove selected knot", class = "btn-sm btn-warning")
+                )),
 
-  actionButton("remove_knot", "Remove selected knot", class = "btn-sm btn-warning"),
+fluidRow(
+      column(3,h5("Selected Knot:")),
+      column(4, verbatimTextOutput("selected_knot_display") ),
+         " "),
 
-  h5("Selected Knot:"), column(4 ,verbatimTextOutput("selected_knot_display"),
-                               conditionalPanel(
-                                 condition = "output.selected_knot_display != 'No knot selected'")),
+                               #conditionalPanel(condition = "output.selected_knot_display != 'No knot selected'"))
+                #)
+
  br(),
 
-   plotlyOutput("spline_plot", height = "600px"),
+   plotlyOutput("spline_plot", height = "600px",width="100%"),
 
 
          br(),
@@ -23,8 +29,8 @@ column(width=9,
                 actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
                 # Information (unique)
                 fluidRow(
-                  column(6, h5("Information"), verbatimTextOutput("fit_info")),
-                  column(6, h5("List of knots / multiplicities"),
+                  #column(9, h5("Information"), verbatimTextOutput("fit_info")),
+                  column(9, h5("List of knots / multiplicities"),
                          verbatimTextOutput("knots_compact", placeholder = TRUE),
                          h5("Coefficients on the Bspline Basis"),
                          verbatimTextOutput("coeff_list", placeholder = TRUE)
@@ -79,6 +85,6 @@ column(width=9,
            uiOutput("derivatives_ui") #end tab derivatives
 
          )
- )
+)
 
 

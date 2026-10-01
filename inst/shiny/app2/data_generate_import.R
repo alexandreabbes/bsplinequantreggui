@@ -36,16 +36,16 @@ test_data<-function()
   y <- as.vector(2 * x + 0.2 * sin(10 * pi * x) + 0.2 * rnorm(n))
   values$xtab <- x
   values$ytab <- y
-  values$data_name <- paste("Test [", xmin, ",", xmax, "]")
+  values$data_name <- paste("Build in test [", xmin, ",", xmax, "]")
   values$fitted <- NULL
   values$curve_lines <- list()
   values$regions <- list()
   showNotification("Test data generated", type = "message")
-
+  update_auto_knots()
 }
 
 temp_data<-function()
-{
+{ clear_all()
   withProgress(message = "Loading...", {
     temp_data <- c(
       -0.32,
@@ -163,23 +163,25 @@ temp_data<-function()
     values$xtab <- x
     values$ytab <- y
     values$data_name <- "Temperature (1880-1992)"
-    values$fitted <- NULL
-    values$curve_lines <- list()
-    values$regions <- list()
+
+
     year_knots <- c(1880, 1889, 1900, 1910, 1930, 1940, 1965, 1992)
-    #knot <- (year_knots - 1880) / (1992 - 1880)
-    knot<-year_knots
-    values$manual_knot <- knot[2:7]
-
-    values$auto_knot_count <- 2
-    updateNumericInput(session,'auto_knot_count',value=2)
-    #      values$knot<-sort(union(values$manual_knot,values$auto_knot))
-    values$knot_multiplicity<-c(values$degree,rep(1,6),values$degree)
-
-    showNotification("Temperature data loaded", type = "message")
+    #knot <- (year_knots - 1880) / (1992 - 1880) #
     updateNumericInput(session, "data_xmin", value = min(values$xtab))
     updateNumericInput(session, "data_xmax", value = max(values$xtab))
+    updateNumericInput(session,'auto_knot_count',value=2)
 
+
+    knot<-year_knots
+    values$auto_knot_count <- 2
+
+    values$manual_knot <- knot[2:7]
+    values$auto_knot_list<-c(knot[1],knot[8])
+    values$knot<-knot
+    reset_multiplicity()
+    # values$knot<-sort(union(values$manual_knot,values$auto_knot)) # scaled knots
+
+    showNotification("Temperature data loaded", type = "message")
   })
 }
 
@@ -302,7 +304,7 @@ load_csv<-function()
       "points"
     ),
     type = "success")
-
+    values$data_name<-basename(file_path)
   }, error = function(e) {
     showNotification(paste("Read error:", e$message), type = "error")
   })

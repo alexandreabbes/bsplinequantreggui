@@ -5,7 +5,6 @@
 # Run with:
 # shiny::runApp("R/run_gui.R")
 
-
 library(BsplineQuantReg)
 
 library(shiny)
@@ -72,17 +71,18 @@ ui <- fluidPage(
   ),
 
 sidebarLayout(
-
     source('sidetab.R',local=TRUE)$value,
     mainPanel(width=9,
       tabsetPanel(
         tabPanel(
           "Visualization",
-               source('visualisation1.R',local=TRUE)$value,
-                    #ui_visualisationtab1(),
+          br(),
+          fluidRow(
 
-                source('visualisation2.R',local=TRUE)$value
+              column(width=9,source('visualisation1.R',local=TRUE)$value)  ,
 
+                             source('visualisation2.R',local=TRUE)$value
+                    )
           ),    #end tab visualisation
 
         tabPanel(
@@ -90,7 +90,7 @@ sidebarLayout(
           br(),
           fluidRow(
             column(6, h4("Summary"), verbatimTextOutput("data_summary")),
-            #,
+
             column(6, h4("Knots"), verbatimTextOutput("knots_info"))
           ),
           br(),
@@ -108,11 +108,8 @@ sidebarLayout(
           ), column(
             6,
             h5("Instructions"),
-            p("1. Mode 'Per region'"),
-            p("2. 'Select' a rectangle on the plot"),
-            p(" Xmin and Xmax fields are updated "),
-            p("3. Select constraints"),
-            p("4. 'Add region'")
+            p("1. Mode 'Per region.- 2. 'Select' a rectangle on the plot. Xmin and Xmax fields are updated.-
+            3. Select constraints.- 4. Clcik 'Add' region.- 5. Selected region can be modified and 'updated'" )
           ))
         ),
         tabPanel(
@@ -121,16 +118,12 @@ sidebarLayout(
           h4("R Code to reproduce the analysis:"),
           verbatimTextOutput("r_code")
         ),
-
-
-
           tabPanel(
               "Basis",
               br(),
              source('basistab.R')
-
             ),
-        tabPanel("Console", br(), fluidRow(column(
+        tabPanel( "Console", br(), fluidRow(column(
           12,
           div(
             style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;",
@@ -149,16 +142,15 @@ sidebarLayout(
                  white-space: pre-wrap; word-wrap: break-word;",
             verbatimTextOutput("console_output")
           )
-        ))
-
+        )))
 ,
 tabPanel('Demo',br(),
 source('demotab.R')
 )
-      )
-)
-)))
 
+)
+))
+)
 
 
 # .........................................................................
@@ -837,16 +829,7 @@ output$regions_list_ui <- renderUI({
   })
 
   observeEvent(input$clear_all, {
-    values$xtab <- NULL
-    values$ytab <- NULL
-    values$knot <- NULL
-    values$fitted <- NULL
-    values$curve_lines <- list()
-    values$regions <- list()
-    values$region_id <- 0
-    values$selected_region_id <- NULL
-    values$data_name <- "No data"
-    showNotification("All cleared", type = "message")
+    clear_all()
   })
 
 

@@ -2,6 +2,37 @@
 # ============ KNOT MANAGEMENT ============
 #==========================================
 
+
+clear_all<-function()
+{
+  values$xtab = NULL
+  values$ytab = NULL
+  values$knot = NULL
+  values$multiplicity=NULL
+  values$manual_knot_multiplicity=NULL
+  values$auto_knot_count = 10
+  values$auto_knot_list= c()
+  values$manual_knot = c()
+  values$extended=vector()
+  values$adding_knot = FALSE
+  values$fitted = NULL
+  values$x_eval = NULL
+  values$y_eval = NULL
+  values$curve_lines = list()
+  values$regions = list()
+  values$data_name = "No data"
+  values$region_id = 0
+  values$selected_region_id = NULL
+  values$selecting_region = FALSE
+  values$derivatives = list()
+  values$consider_multiplicity=TRUE
+  updateNumericInput(data_xmin, 0)
+  updateNumericInput(data_xmax, 1)
+
+showNotification("All cleared", type = "message")
+}
+
+
 reset_multiplicity<-function()
 {
 mn=length(values$manual_knots)

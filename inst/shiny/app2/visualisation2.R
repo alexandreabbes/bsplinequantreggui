@@ -1,9 +1,10 @@
-
+column(3,
 
     conditionalPanel(
     condition = "input.degree<6",
-
+#**
     h3("3. Constraints", class = "text-primary"),
+#**
     radioButtons(
       "constraint_mode",
       "Mode:",
@@ -11,7 +12,7 @@
       selected = "uniform",
       inline = TRUE
     ),
-
+#**
     conditionalPanel(
       condition = "input.constraint_mode == 'uniform'",
       conditionalPanel(
@@ -44,42 +45,37 @@
         )
       )
     )
-  ), # end uniform constraints panel
-
+  ),  # end uniform constraints panel
+#**
+#*
   conditionalPanel(
     condition = "input.constraint_mode == 'region' && input.degree<6",
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "1. Click 'Select'"),
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "2. Select a region on the plot"),
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "X min/max fields are updated"),
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "3. Select constraints"),
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "4. Click 'Add reggion'"),
-    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "5. Last selected region can \n be modified and updated"),
+    div(style = "font-size: 13px; color: #555; margin-bottom: 10px;", "Instructions : 1. Click 'Select' 2. 'Select' a rectangle on the plot. Xmin and Xmax fields are updated.-
+            3. Select constraints.- 4. Add region"),
 
 
-    fluidRow(column(
-      3,
+    fluidRow(
       actionButton(
         "start_selection",
         "Select",
         class = "btn-sm btn-warning",
         style = "width:100%;"
       )
-    ), column(
-      3,
+    ,
       actionButton(
         "clear_regions",
         "Cancel regions",
         class = "btn-sm btn-danger",
         style = "width:100%;"
       )
-    )),
+    ),
+
     br(),
 
-    fluidRow(column(
-      3, numericInput("region_xmin", "X min:", value = 0.3, step = 0.05)
-    ), column(
-      3, numericInput("region_xmax", "X max:", value = 0.6, step = 0.05)
-    )),
+    fluidRow(
+    column(5,numericInput("region_xmin", "X min:", value = 0.3, step = 0.05)),
+    column(5,numericInput("region_xmax", "X max:", value = 0.6, step = 0.05))
+    ),
 
     conditionalPanel(
       condition = "input.degree<5",
@@ -100,6 +96,7 @@
         selected = "0",
         inline = TRUE
       )),
+
     conditionalPanel(
       condition = "input.degree >= 3",
       radioButtons(
@@ -111,41 +108,41 @@
       )
     ),
 
-
-    fluidRow(column(
-      3,
-      actionButton("add_region", "Add region", class = "btn-sm btn-primary", style = "width:100%;")
-    ), column(
-      6,
+    fluidRow(
+      actionButton("add_region", "Add region", class = "btn-sm btn-primary", style = "width:100%;"),
       actionButton("update_region", "Update", class = "btn-sm btn-info", style = "width:100%;")
-    )),
+    ),
 
     br(),
     div(id = "regions_list", style = "max-height: 120px; overflow-y: auto;")
-  ),
+  )  ,
 
   # ============ 4. EXECUTION ============
 
   h3("4. Execution"),
 
-  h5("Color:"),
-  fluidRow(
-    column(
-      3,
-      colourpicker::colourInput("curve_color", NULL, value = "blue")
-    ),
-    column(6, actionButton("apply_color", "Apply", class = "btn-sm"))
-  ),
+
+fluidRow(
+  column(2,h5("Color:")),
+     column(width=3,colourpicker::colourInput("curve_color", NULL, value = "blue")),
+     actionButton("apply_color", "Apply", class = "btn-sm")
+     ),
+
 
   p("Curves:", textOutput("curve_count", inline = TRUE)),
 
 
-  fluidRow(column(3,actionButton("run", "Run", class = "btn-success btn-lg"),
-                  br(),
-                  actionButton("clear_all", "Clear all", class = "btn-sm btn-danger")),
-           column(3,actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),br(),
-                  actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger")
-           )
+  fluidRow(column(4,    actionButton("run", "Run", class = "btn-success btn-lg")),
+           column(4,    actionButton("clear_curves", "Clear last curve", class = "btn-sm btn-warning"),
+                               actionButton("clear_all_curves", "Clear all curves", class = "btn-sm btn-danger")
+                  )
+          ),
+ br(),
 
-  )
+  actionButton("clear_all", "Clear all", class = "btn-sm btn-danger"),
+
+   h5("Information"), verbatimTextOutput("fit_info")  ,
+
+)
+
 
