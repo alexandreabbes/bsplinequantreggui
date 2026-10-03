@@ -26,8 +26,9 @@ clear_all<-function()
   values$selecting_region = FALSE
   values$derivatives = list()
   values$consider_multiplicity=TRUE
-  updateNumericInput(data_xmin, 0)
-  updateNumericInput(data_xmax, 1)
+  updateNumericInput(session, "data_xmin", value=0)
+  updateNumericInput(session, 'data_xmax', value=1)
+
 
 showNotification("All cleared", type = "message")
 }
