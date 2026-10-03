@@ -184,6 +184,9 @@ make_r_code<-function()
 
   paste0(
     "library(BsplineQuantReg)\n\n",
+    paste("# custom function : ",input$custom_func,"\n"),
+    paste("# X min=",input$data_xmin,", X max=",input$data_xmax,
+          " and n=",input$n_points," generated data values:\n " ),
     "x <- c(",
     paste(round(values$xtab, 4), collapse = ", "),
     ")\n",
@@ -224,7 +227,9 @@ make_r_code<-function()
     "Co=show_pp(fitted,local=",input$local,")", "\n",
     "print(Co)\n",
     deriv_code,
-    deriv_plot
+    deriv_plot,
+
+    "\n# seed = ", paste(values$seed, collapse = ", "), "\n"
   )
 }
 

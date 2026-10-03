@@ -140,6 +140,18 @@ column(width=3,
       "Derivative",
       class = "btn-sm btn-info",
       style = "flex:1;"
+    ),
+    actionButton(
+      "demo_shock",
+      "Shock",
+      class = "btn-sm btn-info",
+      style = "flex:1;"
+    ),
+    actionButton(
+      "demo_shock_basis",
+      "Shock and basis",
+      class = "btn-sm btn-info",
+      style = "flex:1;"
     )
   ),
 

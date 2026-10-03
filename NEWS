@@ -1,10 +1,12 @@
 #BsplineQuantRegGui 0.2.3
 ### todo:
--more testing of the gui.
--adapt the versions of core to the version of app, allow 0.2.2 version for basic
+- more testing of the gui.
+- adapt the versions of core to the version of app, allow 0.2.2 version for basic
 and require 0.2.6 for advanced.
 - update readme
-- Change R code and write the custom function and give the seed.
+
+
+
 
 ###changes:
 -generate custom function data does no more trigers auto knots.
@@ -14,7 +16,8 @@ and require 0.2.6 for advanced.
 -refactorise functions in the code : most functions of app.R are externalised.
 -modularise UI : code is spread into several files for better readability.
 -allow to use the old version (more simple) of the app with previous versions of the core.
-
+-add demo shock and shock_basis
+- In exported R code: write the custom function and give the seed.
 
 ### fixes:
 - display degree of derivatives.

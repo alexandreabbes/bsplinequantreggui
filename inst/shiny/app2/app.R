@@ -167,6 +167,7 @@ server <- function(input, output, session) {
 
   # ============ REACTIVE VALUES ============
   values <- reactiveValues(
+    seed=NULL,
     xtab = NULL,
     ytab = NULL,
     knot = NULL,
@@ -880,6 +881,12 @@ output$regions_list_ui <- renderUI({
   })
   observeEvent(input$demo_derivative, {
     execute_demo("derivative2")
+  })
+  observeEvent(input$demo_shock, {
+    execute_demo("shock")
+  })
+  observeEvent(input$demo_shock_basis, {
+    execute_demo("shock_basis")
   })
 
   # Afficher les résultats

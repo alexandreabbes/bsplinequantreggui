@@ -12,6 +12,8 @@ generate_custom<-function(){
     func_str <- gsub("cos\\(", "cos(", func_str)
     func_str <- gsub("pi", "pi", func_str)
     func_str <- gsub("randn\\(", "rnorm(", func_str)
+    values$seed<-.Random.seed
+    set.seed(values$seed)
     y <- eval(parse(text = func_str))
     values$xtab <- x
     values$ytab <- y
