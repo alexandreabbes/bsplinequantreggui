@@ -6,8 +6,6 @@ and require 0.2.6 for advanced.
 - update readme
 
 
-
-
 ###changes:
 -generate custom function data does no more trigers auto knots.
 -add boutons to set auto knots, change generate custom.
@@ -17,7 +15,7 @@ and require 0.2.6 for advanced.
 -modularise UI : code is spread into several files for better readability.
 -allow to use the old version (more simple) of the app with previous versions of the core.
 -add demo shock and shock_basis
-- In exported R code: write the custom function and give the seed.
+-In exported R code: write the custom function and give the seed.
 
 ### fixes:
 - display degree of derivatives.

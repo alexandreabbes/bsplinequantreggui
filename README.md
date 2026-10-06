@@ -8,7 +8,7 @@
 
 The package is available on CRAN.
 
-The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. It provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
+The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. From the version 2.3, the degrees 0 and greater than 5 are also possible. It also provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
 
 ## Features
 
@@ -16,7 +16,7 @@ This GUI application makes it easy to:
 
 - Load and visualize data (from multiple data sources: custom function, CSV files)
 - Interactive plotting: zoom, pan, and add knots by clicking on the plot
-- Configure B-spline parameters (degree 1 to 4), visualise the basis.
+- Configure B-spline parameters (degree 0 to 4 for constraints, and more than 5), visualise the basis.
 - Plot multiple curves with color management
 - Apply shape constraints (monotonicity, convexity, third derivative)
 - Manage constraints per region interactively
@@ -24,8 +24,8 @@ This GUI application makes it easy to:
 - Export reproducible R code
 - Run demo presets directly from the interface (according to degree)
 - Type of regression : quantile or mean-square (for 'BsplineQuantReg' version \>=0.2.3)
-- add/remove manual knots and their multiplicity.
-- control constraints vith derivatives.
+- Add/remove auto nknots, and manual knots with their multiplicities, see the corresponding basis with singularities.
+- control constraints with derivatives.
 
 ## Installation
 
@@ -78,16 +78,19 @@ Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 
 ### Version Compatibility
 
-| GUI Version | Core Version | Mode     | Features                         |
-|-------------|--------------|----------|----------------------------------|
-| v0.2.2      | \>= 0.2.2    | Basic    | Standard regression, constraints |
-| v0.2.2      | \>= 0.2.5    | Advanced | All features incl. multiplicity  |
++-------------+--------------+------------+----------------------------------+
+| GUI Version | Core Version | Mode       | Features                         |
++=============+==============+============+==================================+
+| 0.2.3       | \>= 0.2.2    | Basic      | Standard regression, constraints |
++-------------+--------------+------------+----------------------------------+
+| 0.2.3       | 0.2.6        | Advanced   | All features incl. multiplicity  |
++-------------+--------------+------------+----------------------------------+
 
 This package depends on:
 
 | Package | Purpose |
 |----|----|
-| 'BsplineQuantReg' (\>= 0.2.5) | Core regression functions |
+| 'BsplineQuantReg' (\>= 0.2.6) | Core regression functions |
 | 'shiny' | Interactive web framework |
 | 'plotly' | Interactive graphics |
 | 'DT' | Interactive tables |
