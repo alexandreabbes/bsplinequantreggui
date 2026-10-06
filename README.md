@@ -8,7 +8,7 @@
 
 The package is available on CRAN.
 
-The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. From the version 2.3, the degrees 0 and greater than 5 are also possible. It also provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
+The underlying 'BsplineQuantReg' package provides the core regression methods for B-spline quantile regression with Karlin-Studden polynomial sign characterization, including degrees 1 to 4. From the version 2.3, the degrees 0 and greater than 5 are also available. It also provides a small set of robust functions in pure R for polynomial calculation, piecewise polynomial and B-spline manipulation, including differentiation, B-spline coefficients calculations and transformation to PP-form, evaluation of splines and pp polynomial as functions, and coefficients display in human readable form.
 
 ## Features
 
@@ -25,7 +25,7 @@ This GUI application makes it easy to:
 - Run demo presets directly from the interface (according to degree)
 - Type of regression : quantile or mean-square (for 'BsplineQuantReg' version \>=0.2.3)
 - Add/remove auto nknots, and manual knots with their multiplicities, see the corresponding basis with singularities.
-- control constraints with derivatives.
+- control the application of constraints with derivatives.
 
 ## Installation
 
@@ -74,7 +74,7 @@ Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 ### Core Package
 
 - **Minimum version**: 'BsplineQuantReg' \>= 0.2.2 (Basic mode)
-- **Recommended version**: 'BsplineQuantReg' \>= 0.2.5 (All features)
+- **Recommended version**: 'BsplineQuantReg' \>= 0.2.6 (All features)
 
 ### Version Compatibility
 
