@@ -108,9 +108,9 @@ This package depends on:
 
 ### 2. Spline Configuration
 
-- Select Degree (1 to 4)
+- Select Degree (1 to 4 is standard for constraints, but possible 0 to any)
 - Adjust Auto knots count (placed as quantiles of knots)
-- Click Add knot to enter manual knot placement mode, then click on the plot. The two lists of knots auto and manual are joined.
+- Click Add knot to enter manual knot placement mode, then click on the plot. The two lists of knots auto and manual are almost independant and joined.
 - Click Clear knots to clear manual knots
 - Click on a knot to select it, click on "remove knot" to remove it.
 

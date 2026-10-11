@@ -30,6 +30,7 @@ Suggests:
     cobs,
     knitr,
     rmarkdown,
+    shinytest2,
     testthat
 LazyData: true
 Config/testthat/edition: 3
