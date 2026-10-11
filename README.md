@@ -78,13 +78,10 @@ Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 
 ### Version Compatibility
 
-+-------------+--------------+------------+----------------------------------+
-| GUI Version | Core Version | Mode       | Features                         |
-+=============+==============+============+==================================+
-| 0.2.3       | \>= 0.2.2    | Basic      | Standard regression, constraints |
-+-------------+--------------+------------+----------------------------------+
-| 0.2.3       | 0.2.6        | Advanced   | All features incl. multiplicity  |
-+-------------+--------------+------------+----------------------------------+
+| GUI Version | Core Version | Mode     | Features                         |
+|-------------|--------------|----------|----------------------------------|
+| 0.2.3       | \>= 0.2.2    | Basic    | Standard regression, constraints |
+| 0.2.3       | 0.2.6        | Advanced | All features incl. multiplicity  |
 
 This package depends on:
 
