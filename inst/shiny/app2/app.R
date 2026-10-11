@@ -71,7 +71,7 @@ ui <- fluidPage(
   ),
 
 sidebarLayout(
-    source('sidetab.R',local=TRUE)$value,
+    source('ui_sidetab.R',local=TRUE)$value,
     mainPanel(width=9,
       tabsetPanel(
         tabPanel(
@@ -79,9 +79,9 @@ sidebarLayout(
           br(),
           fluidRow(
 
-              column(width=9,source('visualisation1.R',local=TRUE)$value)  ,
+              column(width=9,source('ui_visualisation1.R',local=TRUE)$value)  ,
 
-                             source('visualisation2.R',local=TRUE)$value
+                             source('ui_visualisation2.R',local=TRUE)$value
                     )
           ),    #end tab visualisation
 
@@ -121,7 +121,7 @@ sidebarLayout(
           tabPanel(
               "Basis",
               br(),
-             source('basistab.R')
+             source('ui_basistab.R')
             ),
         tabPanel( "Console", br(), fluidRow(column(
           12,
@@ -145,7 +145,7 @@ sidebarLayout(
         )))
 ,
 tabPanel('Demo',br(),
-source('demotab.R')
+source('ui_demotab.R')
 )
 
 )
@@ -173,7 +173,7 @@ server <- function(input, output, session) {
     knot = NULL,
     degree=3,
     multiplicity=NULL,
-    manual_knot_multiplicity=NULL,
+#    manual_knot_multiplicity=NULL,
     auto_knot_count = 10,
     auto_knot_list= c(),
     manual_knot = c(),
@@ -254,8 +254,8 @@ observeEvent(input$add_knot_mode, {
 
 observeEvent(input$remove_knot,
              {
-             idx <- selected_knot()
-             remove_knot(idx)
+             idx <- values$selected_knot
+             if (!is.null(idx)){remove_knot(idx)}
              }
              )
 #clear manual knots
@@ -303,25 +303,27 @@ output$knots_compact <- renderPrint({
 #####################################################
 
 # Reactive value pour le nœud sélectionné
-selected_knot <- reactiveVal(NULL)
+#selected_knot <- reactiveVal(NULL)
 # Observer les clics sur le plot principal
 #click<-reactiveVal(NULL)
 
 observeEvent(event_data("plotly_click", source = "plot"),
              {click <- event_data("plotly_click", source = "plot")
+             idx<-NULL
              if (!is.null(click))
                {
-             showNotification(cat("add knot",values$adding_knot),type='message')
+#             showNotification(cat("add knot",values$adding_knot),type='message')
+
              if (!is.null(click) && !is.null(values$knot)) {
                x <- click$x
                idx<-select_knot(x)
-               selected_knot(idx)
+               values$selected_knot<-idx
              }
              if (values$adding_knot)
                {
-                 x<-click$x
+               x<-click$x
                add_knot(x)
-               showNotification(cat('Clicked on ',x),type="message")
+            #   showNotification(cat('Clicked on ',x),type="message")
              }
             }
              }
@@ -426,7 +428,7 @@ output$spline_plot <- renderPlotly({
     )
 
     # Dans le plot de visualisation, afficher les multiplicités
-    if (!is.null(values$knot)) {
+    if (length(values$knot)>0) {
       y_range <- range(values$ytab, na.rm = TRUE)
       y_pos <- y_range[2] - 0.1 * diff(y_range)
       l <- length(values$knot)
@@ -481,7 +483,7 @@ output$spline_plot <- renderPlotly({
       )
 
       # Ajouter le marqueur du nœud sélectionné
-      idx <- selected_knot()
+      idx<-values$selected_knot
       if (!is.null(idx) && idx >= 1 && idx <= length(values$knot)) {
         p <- p %>% add_trace(
           x = values$knot[idx],
@@ -573,7 +575,7 @@ output$spline_plot <- renderPlotly({
 
   # Afficher le nœud sélectionné
   output$selected_knot_display <- renderPrint({
-    idx <- selected_knot()
+    idx <- values$selected_knot
     if (!is.null(idx) && !is.null(values$knot)) {
       cat("  Index:", idx,".")
       cat("  Value:", round(values$knot[idx], 4))

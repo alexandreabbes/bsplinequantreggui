@@ -9,7 +9,7 @@ clear_all<-function()
   values$ytab = NULL
   values$knot = NULL
   values$multiplicity=NULL
-  values$manual_knot_multiplicity=NULL
+  #values$manual_knot_multiplicity=NULL
   values$auto_knot_count = 10
   values$auto_knot_list= c()
   values$manual_knot = c()
@@ -22,6 +22,7 @@ clear_all<-function()
   values$regions = list()
   values$data_name = "No data"
   values$region_id = 0
+  values$selected_knot=NULL
   values$selected_region_id = NULL
   values$selecting_region = FALSE
   values$derivatives = list()
@@ -124,13 +125,13 @@ select_knot<-function(x)
 
   if (min_dist < threshold) {
     idx <- which.min(distances)
-#    selected_knot(idx)
+    values$selected_knot<-idx
     return(idx)
     showNotification(paste("Knot selected:", round(knot[idx], 4)),
                      type = "message", duration = 2)
   } else {
     # Désélectionner si on clique ailleurs
-      selected_knot(NULL)
+      values$selected_knot<-NULL
     return(NULL)
   }
 }
@@ -193,14 +194,26 @@ remove_knot<-function(idx)
   if (idx==1 || idx==length(values$knot))
   {showNotification("You removed one end knot", type="warning")
   }
+  if (!is.null(values$manual_knot)){
+    if (any(values$knot[idx]==values$manual_knot)){
+    id_man=which(values$knot[idx]==values$manual_knot)
+    values$manual_knot<-values$manual_knot[-id_man]
+  }}
   values$knot<-values$knot[-idx]
   values$knot_multiplicity<-values$knot_multiplicity[-idx]
+  if (idx>length(values$knot)){ #if one has removed the last knot
+    if (length(values$knot)>0) {values$selected_knot<-idx-1} #select the preceding if any
+  else values$selected_knot<-NULL #if there is no more knot
+    }
+
   #update ends multiplicities
   if (!is.null(values$knot)){
     values$knot_multiplicity[1]<-values$degree+1
     values$knot_multiplicity[length(values$knot) ] <-values$degree+1
   }
 }
+
+
 
 # Construire la séquence de nœuds avec multiplicités
 build_knot_sequence <- function(knots, multiplicities)
@@ -210,7 +223,7 @@ build_knot_sequence <- function(knots, multiplicities)
     return(c())
   }
   if (length(multiplicities) != length(knots)) {
-    message("knots and multiplicities must have same length. Reseting",type='warning')
+    showNotification("knots and multiplicities must have same length. Reseting",type='warning')
     reset_multiplicity()
   }
 
@@ -292,7 +305,7 @@ update_knot_multiplicity_1<-function()
 
 inc_multiplicity<-function()
 {
-  idx <- selected_knot()
+  idx <- values$selected_knot
   if (is.null(idx)) {
     showNotification("Select a knot first!", type = "warning")
     return()
@@ -309,7 +322,7 @@ inc_multiplicity<-function()
 
 dec_multiplicity<-function()
 {
-  idx <- selected_knot()
+  idx <- values$selected_knot
   if (is.null(idx)) {
     showNotification("Select a knot first!", type = "warning")
     return()
@@ -339,8 +352,11 @@ build_constraints <- function() {
     showNotification("No knots available!", type = "warning")
     return(NULL)
   }
+
   if (is.na(values$degree)) degree<-3 else degree<-values$degree
   kn <- length(values$knot) - 1
+
+  if (kn==0){return()}
   # Contraintes uniformes
   if (input$constraint_mode == "uniform") {
     monot_val <- as.numeric(input$monot)

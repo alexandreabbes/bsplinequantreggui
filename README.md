@@ -103,7 +103,7 @@ This package depends on:
 - Click Test to generate sample data
 - Click Temp to load the global temperature dataset (1880-1992)
 - Click CSV to import your own data file
-- Adjust x range field, the number n of geerated samples
+- Adjust x range field, the number n of generated samples
 - Use the Custom function field to define your own data generator
 
 ### 2. Spline Configuration

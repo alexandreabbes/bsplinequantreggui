@@ -20,6 +20,7 @@ and require 0.2.6 for advanced.
 - display degree of derivatives.
 - remove condition exeption for version 2.6 of core.
 - adding/removing knots confusions
+- remove last knot ==>  preceding is selected
 
 #BsplineQuantRegGui 0.2.2
 ### Fixes :
