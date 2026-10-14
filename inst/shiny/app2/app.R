@@ -18,7 +18,6 @@ library(shinythemes)
 library(png)
 
 # UI ----------------------------------------------------------------------
-
 #source( "./ui_sidetab.R", local = TRUE)
 #source("ui_visualisation1.R", local = TRUE)
 #source("ui_visualisation2.R", local = TRUE)

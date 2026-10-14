@@ -11,12 +11,12 @@ Description: A user-friendly interactive Shiny interface for the 'BsplineQuantRe
     From version 0.2.2 it handles knots multiplicity, Bspline basis visualisation, mean-square regression, pp form visualisation under human readable form, in local or canonical bases,  
     The version 0.2.3 allows regression with spline of any degree, with constraints implemented for degrees 0 to 5.
     The GUI provides two modes, basic (compatible with 'BsplineQuantReg' >= 0.2.2) 
-    and advanced (requires 'BsplineQuantReg' >= 0.2.5 for stable multiplicity features).
+    and advanced (requires 'BsplineQuantReg' >= 0.2.6 for stable multiplicity features).
     This GUI is an R (improved) version of the 'Python Tk' version of 'BsplineQuantRegPy'.
 License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 4.6.0)
-Imports: BsplineQuantReg (>= 0.2.5),
+Imports: BsplineQuantReg (>= 0.2.2),
     shiny,
     shinyjs,
     DT,

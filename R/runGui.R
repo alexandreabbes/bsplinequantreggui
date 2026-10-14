@@ -176,6 +176,11 @@ run_gui <- function(level = "advanced", brow = TRUE, rstudio = FALSE,
 
   # Normaliser le niveau
   level_char <- as.character(level)
+  if (packageVersion("BsplineQuantReg")<'0.2.6')
+    {
+    if (level=="advanced" || level=="2") message('version of BsplineQuantReg is not enough for advanced use of Gui.\n
+    Falling back to basc')
+      level<-"basis"}
 
   # Détecter la version demandée
   if (level_char %in% c("1", "basic")) {

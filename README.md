@@ -109,21 +109,35 @@ This package depends on:
 ### 2. Spline Configuration
 
 - Select Degree (1 to 4 is standard for constraints, but possible 0 to any)
-- Adjust Auto knots count (placed as quantiles of knots)
-- Click Add knot to enter manual knot placement mode, then click on the plot. The two lists of knots auto and manual are almost independant and joined.
-- Click Clear knots to clear manual knots
-- Click on a knot to select it, click on "remove knot" to remove it.
+
+- Knots:
+
+  \> - Adjust Auto knots count (placed as quantiles of knots)
+
+  \> - Click Add knot to enter manual knot placement mode, then click on the plot. The two lists of knots auto and manual are almost independant and joined.
+
+  \> - Click Clear knots to clear manual knots
+
+  \> - Click on a knot to select it, click on "remove knot" to remove it.
 
 ### 3.Knots multiplicity
 
--select or un-select "consider multiplicity"" -click on a knot to select it -adjust multiplicity with + or -. Multiplicity of a knot is limited to degree+1
+- select or un-select "consider multiplicity"
 
-### 3b. View basis
+- click on a knot to select it
+
+- adjust multiplicity with + or -. Multiplicity of a knot is limited to degree+1
+
+  ### 3b. View basis
 
 - go to the basis tab
+
 - select or un-select "consider multiplicity"
+
 - Chose a derivative level
+
 - Check the knots and their multiplicities
+
 - click "update basis" to view the Bspline Basis.
 
 ### 4. Constraints
@@ -138,10 +152,12 @@ This package depends on:
 
 ### 4. Run Analysis
 
+- Select the type of regression:quantile ($L^1$ asymmetric absolute value) or mean ($L^2$ quadratic).
+- Set the desired quantile.
 - Click Run to execute the regression with your chosen solver and type of regression ('BsplineQuantReg' \>= '0.2.3')
 - View results: the curve and the Information. Coefficients (on the B-spline Basis)
-- View equations of the spline ij pp form in a human readable form
-- View derivatives and check the constraints
+- Equations of the spline in pp-form in a human readable form: (Des)Activate view.
+- Derivatives and check the constraints: (Des)Activate View.
 - View verbose output in the Console tab if verbose = TRUE is selected
 - Informations: Degree, tau, constraints, knots and coefficients
 - Data: Summary and table of the data
@@ -152,11 +168,11 @@ This package depends on:
 
 ### 4c Check output in console
 
-- select "verbose" to print verbose aoutput in the console tab.
+- select "verbose" to print verbose output in the console tab.
 
 ### 5. Run Demos
 
-- Click on any demo to run it, and visualise in the demo tab. The degree of the spline is that selected in the GUI.
+- Click on any demo to run and visualise it in the demo tab. The degree of the spline is that selected in the GUI.
 
 ## Citation
 
