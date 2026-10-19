@@ -49,14 +49,14 @@ Manual knots are added when entering the mode "add knots". Rules:
 Click on the Test button to load the demo data with a default set of
 knots.
 ```{r echo=FALSE, out.width="90%", fig.cap="Convexity constraint (Conv = U)"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-001.png")
+knitr::include_graphics("./figures/test_add_remove_knots-001.png")
 ```
 
 ### Select a knot 
 To select a knot, simply click on it in the plot. The selected knot
 is highlighted and its index and value appear in the information bar.
 ```{r echo=FALSE, out.width="90%", fig.cap="Initial set of knots"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-002.png")
+knitr::include_graphics("./figures/test_add_remove_knots-002.png")
 ```
 
 
@@ -66,7 +66,7 @@ selected knot and the next ones. After each removal, the next knot is
 automatically selected.
 
 ```{r echo=FALSE, out.width="90%", fig.cap="One knot is selected"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-003.png")
+knitr::include_graphics("./figures/test_add_remove_knots-003.png")
 ```
 
 #### Add knots
@@ -74,7 +74,7 @@ Click on the Add knot button to enter the manual addition mode. The
 button label changes to Stop while the mode is active.
 
 ```{r echo=FALSE, out.width="90%", fig.cap="knots are removed"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-004.png")
+knitr::include_graphics("./figures/test_add_remove_knots-004.png")
 ```
 
 #### Reduce the number of auto knot
@@ -83,31 +83,31 @@ If needed, reduce the number of auto knots (for example to 4). The
 change takes effect after pressing **Set auto knots**.
 
 ```{r echo=FALSE, out.width="90%", fig.cap="'Add Knot' is selected"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-007.png")
+knitr::include_graphics("./figures/test_add_remove_knots-007.png")
 ```
 
 #### Run when ready
 Once the knots are set, click on **Run** to fit the spline.
 ```{r echo=FALSE, out.width="90%", fig.cap="add manual knots"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-008.png")
+knitr::include_graphics("./figures/test_add_remove_knots-008.png")
 ```
 #### run again with some more knots
 You can add more knots and run again to see the effect on the fitted
 curve.
 
 ```{r echo=FALSE, out.width="90%", fig.cap="regression curve with manual knots"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-010.png")
+knitr::include_graphics("./figures/test_add_remove_knots-010.png")
 ```
 
 ```{r echo=FALSE, out.width="90%", fig.cap="Regression curve with more knots"}
-knitr::include_graphics("../man/figures/test_add_remove_knots-011.png")
+knitr::include_graphics("./figures/test_add_remove_knots-011.png")
 ```
 #### Then remove the manual knots (red upper button)
 To remove all manual knots at once, click on the red Clear manual
 knots button. Auto knots are preserved.
 
 ```{r echo=FALSE, out.width="90%", fig.cap="Remove the manual knots "}
-knitr::include_graphics("../man/figures/test_add_remove_knots-012.png")
+knitr::include_graphics("./figures/test_add_remove_knots-012.png")
 ```
 
 
