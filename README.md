@@ -71,10 +71,9 @@ Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 
 ## Requirements
 
-### Core Package
+### Core Package 
 
-- **Minimum version**: 'BsplineQuantReg' \>= 0.2.2 (Basic mode)
-- **Recommended version**: 'BsplineQuantReg' \>= 0.2.6 (All features)
+'BsplineQuantReg' \>= 0.2.2 (Basic mode) or \>= 0.2.6 (All features)
 
 ### Version Compatibility
 
@@ -83,18 +82,7 @@ Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 | 0.2.3       | \>= 0.2.2    | Basic    | Standard regression, constraints |
 | 0.2.3       | 0.2.6        | Advanced | All features incl. multiplicity  |
 
-This package depends on:
 
-| Package | Purpose |
-|----|----|
-| 'BsplineQuantReg' (\>= 0.2.6) | Core regression functions |
-| 'shiny' | Interactive web framework |
-| 'plotly' | Interactive graphics |
-| 'DT' | Interactive tables |
-| 'shinythemes' | UI themes |
-| 'shinyjs' | Enhanced JavaScript capabilities |
-| 'colourpicker' | Color selection widget |
-| 'ECOSolveR' | A good solver that causes no problem to compile |
 
 ## Usage Guide
 
@@ -182,7 +170,7 @@ If you use this package in your research, please cite:
 
 @Article{Abbes2025, author = {Alexandre Abbes}, title = {Quantile Regression with Cubic Polynomial Splines under Shape Constraints with Applications}, year = {2025}, doi = {10.5281/zenodo.17427913} }
 
-@Manual{Abbes2026R, author = {Alexandre Abbes}, title = {BsplineQuantReg: Quantile Regression with B-Splines of Degrees 1 to 4}, year = {2026}, note = {R package version 0.2.0}, url = {<https://cran.r-project.org/package=BsplineQuantReg>} }
+@Manual{Abbes2026R, author = {Alexandre Abbes}, title = {BsplineQuantReg: Quantile Regression with B-Splines of any degree, shape constraints for Degrees 0 to 4}, year = {2026}, note = {R package version 0.2.0}, url = {<https://cran.r-project.org/package=BsplineQuantReg>} }
 
 ## License
 
