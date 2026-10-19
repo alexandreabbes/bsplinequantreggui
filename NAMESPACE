@@ -31,4 +31,7 @@ importFrom(shiny,
 importFrom(shinyjs,useShinyjs)
 importFrom(shinythemes,shinytheme)
 importFrom(stats,quantile)
-importFrom(utils,capture.output)
+importFrom(utils,
+  capture.output,
+  packageVersion
+)

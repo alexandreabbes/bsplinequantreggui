@@ -10,5 +10,6 @@
 #' @importFrom png readPNG
 #' @importFrom stats quantile
 #' @importFrom utils capture.output
+#' @importFrom utils packageVersion
 NULL
 
