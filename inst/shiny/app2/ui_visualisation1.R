@@ -21,10 +21,11 @@ fluidRow(
 
          br(),
          #MULTIPLICITY
-         h5("Change Knot Multiplicity: (Multiplicity: m, Degree: d => minimum regularity at knot is C^{d-m}. C^{-1}:discontinuous) ",
-
-            checkboxInput("consider_multiplicity_main","Consider Internal Multiplicities", value=TRUE )),
-         h5("Warning: Degree=1 and any Multiplicity>1 cannot handle constraints"),
+         h5(
+          checkboxInput("Consider_multiplicity_main","Consider Internal Multiplicities (Warning: Degree=1 and any Multiplicity>1 cannot handle constraints)", value=TRUE )),
+          withMathJax(" \\( Multiplicity:~m,~Degree:~d~ \\Rightarrow ~minimum~regularity~at~knot~is~ C^{d-m}.~\\) "),
+          withMathJax("\\( m=d+1\\Rightarrow C^{-1}:~ discontinuous\\) "),
+         h5("Increase/Decrease Multiplicity of selected knot:"),
          column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
                 actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
                 # Information (unique)
