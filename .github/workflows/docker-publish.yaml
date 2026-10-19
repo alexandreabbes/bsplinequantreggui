@@ -39,8 +39,8 @@ jobs:
         with:
           context: .
           file: inst/docker/Dockerfile
+          no-cache: true
           push: true
           tags: |
             ghcr.io/${{ env.REPO_LC }}:latest
             ghcr.io/${{ env.REPO_LC }}:${{ github.sha }}
-            ghcr.io/${{ env.REPO_LC }}:0.1.0
