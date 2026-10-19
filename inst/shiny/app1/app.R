@@ -222,8 +222,8 @@ ui <- fluidPage(
 
       div(
         style = "font-size: 11px; color: #666; text-align: center;",
-        p("BsplineQuantRegGui v0.1.2"),
-        p("BsplineQuantReg 0.2.2"),
+        p("BsplineQuantRegGui (light): 0.1.2" ) ,
+        p("BsplineQuantReg",paste(packageVersion('BsplineQuantReg'))),
         p("GPL3 (c) Abbes, 2026"),
         a("GitHub", href = "https://github.com/alexandreabbes/BsplineQuantReg", target = "_blank")
       )
