@@ -120,7 +120,7 @@ sidebarLayout(
           tabPanel(
               "Basis",
               br(),
-             source('ui_basistab.R')
+             source('ui_basistab.R',local=TRUE)$value
             ),
         tabPanel( "Console", br(), fluidRow(column(
           12,
@@ -144,7 +144,7 @@ sidebarLayout(
         )))
 ,
 tabPanel('Demo',br(),
-source('ui_demotab.R')
+source('ui_demotab.R', local = TRUE)$value
 )
 
 )
