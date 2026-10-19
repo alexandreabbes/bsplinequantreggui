@@ -15,7 +15,7 @@ Description: A user-friendly interactive Shiny interface for the 'BsplineQuantRe
     This GUI is an R (improved) version of the 'Python Tk' version of 'BsplineQuantRegPy'.
 License: GPL-3
 Encoding: UTF-8
-Depends: R (>= 4.6.0)
+Depends: R (>= 4.4.0)
 Imports: BsplineQuantReg (>= 0.2.2),
     shiny,
     shinyjs,
