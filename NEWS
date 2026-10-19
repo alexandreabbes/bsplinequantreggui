@@ -1,9 +1,4 @@
 # BsplineQuantRegGui 0.2.3
-### todo:
-- more testing of the gui.
-- adapt the versions of core to the version of app, allow 0.2.2 version for basic
-and require 0.2.6 for advanced.
-
 
 ### changes:
 -generate custom function data does no more trigers auto knots.
