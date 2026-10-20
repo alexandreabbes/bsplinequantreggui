@@ -1,6 +1,6 @@
 # Dockerfile
 
-FROM rocker/shiny:4.6.0
+FROM rocker/shiny:4.4.0
 
 # Installer les dépendances système
 RUN apt-get update && apt-get install -y \
@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libcurl4-openssl-dev \
     git \
+    libgmp-dev \
+    cmake \
     libwebpmux3 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +28,7 @@ RUN R -e "remotes::install_version('CVXR', version = '1.9.1', repos = 'https://c
 RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantReg', ref = 'with_quartic', upgrade='never')"
 
 # Installer BsplineQuantRegGui (pour les dépendances)
-RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main3')"
+RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main3', upgrade='never')
 
 
 COPY . /app
