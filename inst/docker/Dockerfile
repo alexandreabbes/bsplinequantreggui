@@ -28,7 +28,7 @@ RUN R -e "remotes::install_version('CVXR', version = '1.9.1', repos = 'https://c
 RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantReg', ref = 'with_quartic', upgrade='never')"
 
 # Installer BsplineQuantRegGui (pour les dépendances)
-RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main3', upgrade='never')
+RUN R -e "remotes::install_github('alexandreabbes/BsplineQuantRegGui', ref = 'main3', upgrade='never')"
 
 
 COPY . /app
