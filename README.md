@@ -34,6 +34,10 @@ This GUI application makes it easy to:
 ```         
 install.packages("BsplineQuantRegGui")
 ```
+### From Codeberg git Repository
+```{r}
+remotes::install_git("https://codeberg.org/alexandreabbes/bsplinequantreggui")
+```
 
 ### From GitHub
 
