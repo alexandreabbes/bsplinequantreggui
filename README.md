@@ -69,6 +69,21 @@ docker run -e APP_VERSION="basic" -p 3838:3838 ghcr.io/alexandreabbes/bsplinequa
 
 Then open the local adress "127.0.0.1:3838" in your browser (remove the quotes).
 
+
+## Online documentation
+
+`BsplineQuantRegGui` is documented primarily online, rather than through an extensive set of vignettes embedded in the package.
+This choice keeps the package lightweight: the documentation includes many interface snapshots, 
+which would otherwise consume significant disk space and bandwidth for every installation.
+
+All vignettes are available in HTML at:
+
+**https://bsplinequantreg-doc.statichost.page/**
+
+The site hosts the HTML builds of the vignettes for both `BsplineQuantReg` and `BsplineQuantRegGui`,
+in English, French, German, Arabic, Russian, and Chinese. Each language has its own section 
+on the landing page, with direct links to the core, application, and interface vignettes
+
 ## Requirements
 
 ### Core Package 

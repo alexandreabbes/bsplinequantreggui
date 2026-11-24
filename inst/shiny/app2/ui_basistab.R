@@ -12,7 +12,7 @@ fluidRow(
     checkboxInput("basis_show_multiplicity", "Show multiplicity labels", value = TRUE),
     actionButton("basis_update", "Update Basis",
                  class = "btn-primary btn-block"),
-    checkboxInput("consider_multiplicity","Consider Interal Multiplicities",value=TRUE),
+    checkboxInput("consider_multiplicity","Consider Internal Multiplicities",value=TRUE),
 
 
     hr(),

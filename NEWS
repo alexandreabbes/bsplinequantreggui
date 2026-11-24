@@ -1,3 +1,10 @@
+# BsplineQuantRegGui 0.2.31
+###fixed
+-in the app code give an ID to the main tab, to retrieve it and access with tests.
+-add the button "reset multiplicities"
+-fix miseplling in basis tab
+
+
 # BsplineQuantRegGui 0.2.3
 
 ### changes:

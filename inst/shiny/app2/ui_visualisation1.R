@@ -28,6 +28,7 @@ fluidRow(
          h5("Increase/Decrease Multiplicity of selected knot:"),
          column(8, actionButton("inc_multiplicity", "+", class = "btn-sm btn-primary"),
                 actionButton("dec_multiplicity", "-", class = "btn-sm btn-warning"),
+                actionButton("reset_multiplicity", "reset multiplicities"),
                 # Information (unique)
                 fluidRow(
                   #column(9, h5("Information"), verbatimTextOutput("fit_info")),

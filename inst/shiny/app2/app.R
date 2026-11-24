@@ -72,7 +72,9 @@ ui <- fluidPage(
 sidebarLayout(
     source('ui_sidetab.R',local=TRUE)$value,
     mainPanel(width=9,
+
       tabsetPanel(
+        id = "main_tabs",
         tabPanel(
           "Visualization",
           br(),
@@ -165,6 +167,7 @@ server <- function(input, output, session) {
   })
 
   # ============ REACTIVE VALUES ============
+
   values <- reactiveValues(
     seed=NULL,
     xtab = NULL,
